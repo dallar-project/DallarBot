@@ -4,6 +4,8 @@ using System.Text;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Net;
+
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -15,25 +17,32 @@ namespace DallarBot.Services
 {
     public class GlobalHandlerService
     {
-        public DiscordSocketClient _discord;
-        private CommandService _commands;
-        private IServiceProvider _provider;
+        public DiscordSocketClient discord;
+        private CommandService commands;
+        private IServiceProvider provider;
+        public DallarConnectionManager client;
 
-        public async Task InitializeAsync(IServiceProvider provider)
+        public async Task InitializeAsync(IServiceProvider _provider)
         {
-            _provider = provider;
+            provider = _provider;
 
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 
-        public GlobalHandlerService(IServiceProvider provider, DiscordSocketClient discord, CommandService commands)
+        public GlobalHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands)
         {
-            _discord = discord;
-            _commands = commands;
-            _provider = provider;
+            discord = _discord;
+            commands = _commands;
+            provider = _provider;
 
-            _discord.Connected += Connected;
-            _discord.Disconnected += Disconnected;
+            client = new DallarConnectionManager("http://127.0.0.1:20133");
+            client.credentials = new NetworkCredential("kanga", "testpass");
+
+            //var p = _client.GetDifficulty();
+            //Console.WriteLine(p);
+
+            discord.Connected += Connected;
+            discord.Disconnected += Disconnected;
         }
 
         private Task Disconnected(Exception ex)
@@ -60,21 +69,21 @@ namespace DallarBot.Services
 
         public bool isUserAdmin(SocketGuildUser user)
         {
-            var guild = _discord.GetGuild(user.Guild.Id);
+            var guild = discord.GetGuild(user.Guild.Id);
             var adminRole = guild.Roles.FirstOrDefault(x => x.Name == "Admin");
             return user.Roles.Contains(adminRole);
         }
 
         public bool isUserModerator(SocketGuildUser user)
         {
-            var guild = _discord.GetGuild(user.Guild.Id);
+            var guild = discord.GetGuild(user.Guild.Id);
             var moderatorRole = guild.Roles.FirstOrDefault(x => x.Name == "Moderator");
             return user.Roles.Contains(moderatorRole);
         }
 
         public async Task Say(ulong guildID, ulong channelID, string say)
         {
-            var guild = _discord.GetGuild(guildID);
+            var guild = discord.GetGuild(guildID);
             var channel = guild.GetTextChannel(channelID);
             var message = await channel.SendMessageAsync(say);
             new MessageManager(message as IUserMessage, 90);
@@ -82,7 +91,7 @@ namespace DallarBot.Services
 
         public async Task Say(ulong guildID, ulong channelID, string say, int time)
         {
-            var guild = _discord.GetGuild(guildID);
+            var guild = discord.GetGuild(guildID);
             var channel = guild.GetTextChannel(channelID);
             var message = await channel.SendMessageAsync(say);
             new MessageManager(message as IUserMessage, time);

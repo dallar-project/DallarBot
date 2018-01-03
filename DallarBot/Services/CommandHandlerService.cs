@@ -15,26 +15,26 @@ namespace DallarBot.Services
 {
     public class CommandHandlerService
     {
-        public DiscordSocketClient _discord;
-        private CommandService _commands;
-        private IServiceProvider _provider;
+        public DiscordSocketClient discord;
+        private CommandService commands;
+        private IServiceProvider provider;
 
-        public async Task InitializeAsync(IServiceProvider provider)
+        public async Task InitializeAsync(IServiceProvider _provider)
         {
-            _provider = provider;
+            provider = _provider;
 
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 
-        public CommandHandlerService(IServiceProvider provider, DiscordSocketClient discord, CommandService commands)
+        public CommandHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands)
         {
-            _discord = discord;
-            _commands = commands;
-            _provider = provider;
+            discord = _discord;
+            commands = _commands;
+            provider = _provider;
 
-            _discord.MessageReceived += HandleCommandAsync;
+            discord.MessageReceived += HandleCommandAsync;
 
-            _discord.SetGameAsync("Dallar");
+            discord.SetGameAsync("Dallar");
         }
 
         private async Task HandleCommandAsync(SocketMessage socketMessage)
@@ -46,12 +46,12 @@ namespace DallarBot.Services
                 return;
             }
 
-            var context = new SocketCommandContext(_discord, message);                       
+            var context = new SocketCommandContext(discord, message);                       
             int argPos = 0;
 
             if (message.HasCharPrefix('.', ref argPos))
             {
-                var result = await _commands.ExecuteAsync(context, argPos, _provider);
+                var result = await commands.ExecuteAsync(context, argPos, provider);
                 if (result.Error == CommandError.UnknownCommand)
                 {
                     await message.DeleteAsync();

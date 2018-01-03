@@ -16,7 +16,7 @@ namespace DallarBot
         static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
     
-        private DiscordSocketClient _client;
+        private DiscordSocketClient client;
 
         public async Task MainAsync()
         {
@@ -29,15 +29,15 @@ namespace DallarBot
             Console.WriteLine("");
 
             Console.WriteLine(CenterString("Initialising bot..."));
-        
-            _client = new DiscordSocketClient();
+
+            client = new DiscordSocketClient();
 
             var services = ConfigureServices();
             await services.GetRequiredService<CommandHandlerService>().InitializeAsync(services);
             await services.GetRequiredService<GlobalHandlerService>().InitializeAsync(services);
 
-            await _client.LoginAsync(TokenType.Bot, "Mzk1MTUzMTE1NzUxNjQ1MTk0.DSOuiw.M74BFkuqdgBQwnQOyKx-uv7-EIA");
-            await _client.StartAsync();
+            await client.LoginAsync(TokenType.Bot, "Mzk1MTUzMTE1NzUxNjQ1MTk0.DSOuiw.M74BFkuqdgBQwnQOyKx-uv7-EIA");
+            await client.StartAsync();
 
             await Task.Delay(-1);
         }
@@ -46,7 +46,7 @@ namespace DallarBot
         {
             return new ServiceCollection()
                 // Base
-                .AddSingleton(_client)
+                .AddSingleton(client)
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlerService>()
                 .AddSingleton<GlobalHandlerService>()
