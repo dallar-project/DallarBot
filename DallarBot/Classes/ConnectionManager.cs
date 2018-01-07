@@ -10,12 +10,12 @@ using Newtonsoft.Json.Linq;
 
 namespace DallarBot.Classes
 {
-    public class DallarConnectionManager
+    public class ConnectionManager
     {
         public Uri uri;
         public ICredentials credentials;
 
-        public DallarConnectionManager(string _uri)
+        public ConnectionManager(string _uri)
         {
             uri = new Uri(_uri);
         }
@@ -69,9 +69,9 @@ namespace DallarBot.Classes
             }
         }
 
-        public void CreateNewAddressForUser()
+        public string CreateNewAddressForUser(string accountName)
         {
-            string NewAddress = (string)InvokeMethod("getnewaddress")["result"];
+            return InvokeMethod("getnewaddress", accountName)["result"].ToString();
         }
 
         public float GetDifficulty()
@@ -92,6 +92,68 @@ namespace DallarBot.Classes
         public JObject GetMiningInformation()
         {
             return InvokeMethod("getmininginfo")["result"] as JObject;
+        }
+
+        public decimal GetRawAccountBalance(string account)
+        {
+            return (decimal)InvokeMethod("getbalance", account, 6)["result"];
+        }
+
+        public decimal GetUnconfirmedAccountBalance(string account)
+        {
+            decimal pending = (decimal)InvokeMethod("getbalance", account, 0)["result"];
+            return pending - GetRawAccountBalance(account);
+        }
+
+        public string GetAccountAddress(string account)
+        {
+            return InvokeMethod("getaccountaddress", account)["result"].ToString();
+        }
+
+        public string GetAccountAddressSubtle(string account)
+        {
+            List<String> list = InvokeMethod("getaddressesbyaccount", account)["result"].ToObject<List<String>>();
+            return list[0];
+        }
+
+        public bool DoesAccountExist(string account)
+        {
+            List<String> list = InvokeMethod("getaddressesbyaccount", account)["result"].ToObject<List<String>>();
+            return (list.Count >= 1);
+        }
+
+        public bool SendToAddress(string fromAccount, string toWallet, decimal amount)
+        {
+            string TransactionID = InvokeMethod("sendfrom", fromAccount, toWallet, amount - Convert.ToDecimal(0.00004520), 1, "")["result"].ToString();
+            return (TransactionID != null && TransactionID != "");
+        }
+
+        public bool MoveToAddress(string fromAccount, string toAccount, decimal amount)
+        {
+            string TransactionID = InvokeMethod("move", fromAccount, toAccount, amount - Convert.ToDecimal(0.00004520), 1, "")["result"].ToString();
+            return (TransactionID != null && TransactionID != "");
+        }
+
+        public bool GetWalletAddressFromUser(ulong userID, bool createIfNotFound, out string walletAddress)
+        {
+            walletAddress = "";
+            if (DoesAccountExist(userID.ToString()))
+            {
+                walletAddress = GetAccountAddressSubtle(userID.ToString());
+                return true;
+            }
+            else
+            {
+                if (createIfNotFound)
+                {
+                    walletAddress = CreateNewAddressForUser(userID.ToString());
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
     }
 }

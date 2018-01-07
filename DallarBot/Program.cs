@@ -35,6 +35,7 @@ namespace DallarBot
             var services = ConfigureServices();
             await services.GetRequiredService<CommandHandlerService>().InitializeAsync(services);
             await services.GetRequiredService<GlobalHandlerService>().InitializeAsync(services);
+            await services.GetRequiredService<SettingsHandlerService>().InitializeAsync(services);
 
             await client.LoginAsync(TokenType.Bot, "Mzk1MTUzMTE1NzUxNjQ1MTk0.DSOuiw.M74BFkuqdgBQwnQOyKx-uv7-EIA");
             await client.StartAsync();
@@ -50,6 +51,7 @@ namespace DallarBot
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlerService>()
                 .AddSingleton<GlobalHandlerService>()
+                .AddSingleton<SettingsHandlerService>()
                 // Add additional services here...
                 .BuildServiceProvider();
         }

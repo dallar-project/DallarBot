@@ -49,12 +49,11 @@ namespace DallarBot.Services
             var context = new SocketCommandContext(discord, message);                       
             int argPos = 0;
 
-            if (message.HasCharPrefix('.', ref argPos))
+            if (message.HasCharPrefix('!', ref argPos))
             {
                 var result = await commands.ExecuteAsync(context, argPos, provider);
                 if (result.Error == CommandError.UnknownCommand)
                 {
-                    await message.DeleteAsync();
                 }
             }
         }
