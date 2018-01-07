@@ -15,9 +15,6 @@ namespace DallarBot.Classes
 {
     public class WithdrawManager
     {
-        public delegate void TimedUp(object sender);
-        public event TimedUp TimerFinished;
-
         Timer MessageTimer = new Timer(1000);
         int TimePassedThreshold = 90;
         DateTime TimePosted = DateTime.Now;
@@ -40,7 +37,7 @@ namespace DallarBot.Classes
             if ((DateTime.Now - TimePosted).TotalSeconds >= TimePassedThreshold)
             {
                 MessageTimer.Stop();
-                TimerFinished(this);
+                guildUser = null;
             }
         }
     }

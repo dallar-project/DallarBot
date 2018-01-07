@@ -141,10 +141,5 @@ namespace DallarBot.Services
         {
             return (user.Nickname == null || user.Nickname == "" ? user.Username : user.Nickname);
         }
-
-        public void WithdrawlObject_TimerFinished(object sender)
-        {
-            WithdrawlObjects.Remove(sender as WithdrawManager);
-        }
     }
 }

@@ -71,7 +71,6 @@ namespace DallarBot.Modules
                     else
                     {
                         WithdrawManager withdrawlObject = new WithdrawManager(Context.User as SocketGuildUser, amount);
-                        withdrawlObject.TimerFinished += global.WithdrawlObject_TimerFinished;
                         global.WithdrawlObjects.Add(withdrawlObject);
                         await Context.User.SendMessageAsync("Please respond with your wallet addresss.");
                     }
