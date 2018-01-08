@@ -24,7 +24,6 @@ namespace DallarBot.Services
         public ConnectionManager client;
         private readonly SettingsHandlerService settings;
 
-        public List<ConfirmQueryObject> queriesQueue = new List<ConfirmQueryObject>();
         public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
 
         public async Task InitializeAsync(IServiceProvider _provider)
