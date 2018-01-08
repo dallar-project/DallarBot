@@ -37,7 +37,7 @@ namespace DallarBot
             await services.GetRequiredService<GlobalHandlerService>().InitializeAsync(services);
             await services.GetRequiredService<SettingsHandlerService>().InitializeAsync(services);
 
-            await client.LoginAsync(TokenType.Bot, "Mzk1MTUzMTE1NzUxNjQ1MTk0.DSOuiw.M74BFkuqdgBQwnQOyKx-uv7-EIA");
+            await client.LoginAsync(TokenType.Bot, services.GetService<SettingsHandlerService>().dallarSettings.startup.token);
             await client.StartAsync();
 
             await Task.Delay(-1);

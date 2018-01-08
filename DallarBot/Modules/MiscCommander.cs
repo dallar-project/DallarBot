@@ -51,10 +51,10 @@ namespace DallarBot.Modules
         [Command("help")]
         public async Task GetHelp()
         {
-            if (settings.settings.helpCommands != null)
+            if (settings.dallarSettings.helpCommands != null)
             {
                 string helpString = "```" + Environment.NewLine + "DALLAR COMMANDS" + Environment.NewLine;
-                foreach (var item in settings.settings.helpCommands)
+                foreach (var item in settings.dallarSettings.helpCommands)
                 {
                     helpString += item.command + " - " + item.description + Environment.NewLine;
                 }

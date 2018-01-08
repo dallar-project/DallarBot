@@ -42,8 +42,8 @@ namespace DallarBot.Services
             provider = _provider;
             settings = _settings;
 
-            client = new ConnectionManager(settings.settings.rpc.ipaddress + ":" + settings.settings.rpc.port);
-            client.credentials = new NetworkCredential(settings.settings.rpc.username, settings.settings.rpc.password);
+            client = new ConnectionManager(settings.dallarSettings.rpc.ipaddress + ":" + settings.dallarSettings.rpc.port);
+            client.credentials = new NetworkCredential(settings.dallarSettings.rpc.username, settings.dallarSettings.rpc.password);
 
             discord.Connected += Connected;
             discord.Disconnected += Disconnected;
