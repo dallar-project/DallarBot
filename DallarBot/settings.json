@@ -10,6 +10,7 @@
 		"port": "REPLACE ME",
 		"username": "REPLACE ME",
 		"password": "REPLACE ME",
+		"txfee": 0.0002
 	},
 	"guilds":
 	[
@@ -23,6 +24,10 @@
 		{
 			"command": "!help",
 			"description": "Get the list of available commands via DM"
+		},
+		{
+			"command": "!difficulty",
+			"description": "Send DAL from your DallarBot Wallet to another user's DallarBot Wallet"
 		},
 		{
 			"command": "!balance",
@@ -51,6 +56,10 @@
 		{
 			"command": "!give <amount> <tag user>",
 			"description": "Give DAL from your DallarBot Wallet to another user's DallarBot Wallet"
+		},
+		{
+			"command": "!transfer <amount> <tag user>",
+			"description": "Send DAL from your DallarBot Wallet to another user's DallarBot Wallet"
 		}
 	]
 }
