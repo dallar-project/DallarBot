@@ -34,6 +34,7 @@ namespace DallarBot.Services
         public string port { get; set; }
         public string username { get; set; }
         public string password { get; set; }
+        public decimal txfee { get; set; }
     }
 
     public class SettingsGuild

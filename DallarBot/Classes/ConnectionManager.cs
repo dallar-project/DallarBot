@@ -124,14 +124,19 @@ namespace DallarBot.Classes
 
         public bool SendToAddress(string fromAccount, string toWallet, decimal amount)
         {
-            string TransactionID = InvokeMethod("sendfrom", fromAccount, toWallet, amount - Convert.ToDecimal(0.00004520), 1, "")["result"].ToString();
+            string TransactionID = InvokeMethod("sendfrom", fromAccount, toWallet, amount, 1, "")["result"].ToString();
             return (TransactionID != null && TransactionID != "");
         }
 
         public bool MoveToAddress(string fromAccount, string toAccount, decimal amount)
         {
-            string TransactionID = InvokeMethod("move", fromAccount, toAccount, amount - Convert.ToDecimal(0.00004520), 1, "")["result"].ToString();
+            string TransactionID = InvokeMethod("move", fromAccount, toAccount, amount, 1, "")["result"].ToString();
             return (TransactionID != null && TransactionID != "");
+        }
+
+        public int GetBlockCount()
+        {
+            return (int)InvokeMethod("getblockcount")["result"];
         }
 
         public bool GetWalletAddressFromUser(ulong userID, bool createIfNotFound, out string walletAddress)
