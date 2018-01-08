@@ -69,6 +69,11 @@ namespace DallarBot.Classes
             }
         }
 
+        public bool SetTXFee(decimal amount)
+        {
+            return (bool)InvokeMethod("settxfee", amount)["result"];
+        }
+
         public string CreateNewAddressForUser(string accountName)
         {
             return InvokeMethod("getnewaddress", accountName)["result"].ToString();
