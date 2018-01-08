@@ -22,7 +22,6 @@ namespace DallarBot.Services
         private CommandService commands;
         private IServiceProvider provider;
         public ConnectionManager client;
-        public SQLConnectionManager sql;
         private readonly SettingsHandlerService settings;
 
         public List<ConfirmQueryObject> queriesQueue = new List<ConfirmQueryObject>();
