@@ -54,8 +54,10 @@ namespace DallarBot.Services
             if (message.HasCharPrefix('!', ref argPos))
             {
                 var result = await commands.ExecuteAsync(context, argPos, provider);
-                if (result.Error == CommandError.UnknownCommand)
+                if (result.Error == CommandError.MultipleMatches)
                 {
+                    await context.Message.DeleteAsync();
+                    await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
                 }
             }
         }

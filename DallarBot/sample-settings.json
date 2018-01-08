@@ -10,13 +10,17 @@
 		"port": "REPLACE ME",
 		"username": "REPLACE ME",
 		"password": "REPLACE ME",
-		"txfee": 0.0002
 	},
 	"guilds":
 	[
 		{
-			"displayName": "Dallar",
-			"guildID": "391453840677011457"
+			"displayName": "REPLACE ME",
+			"guildID": "REPLACE ME",
+			"tx":
+			{
+				"txfee": 0.0002,
+				"feeAccount": "REPLACE ME"
+			}
 		}
 	],
 	"helpCommands":

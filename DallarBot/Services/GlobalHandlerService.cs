@@ -44,7 +44,12 @@ namespace DallarBot.Services
 
             client = new ConnectionManager(settings.dallarSettings.rpc.ipaddress + ":" + settings.dallarSettings.rpc.port);
             client.credentials = new NetworkCredential(settings.dallarSettings.rpc.username, settings.dallarSettings.rpc.password);
-            client.SetTXFee(settings.dallarSettings.rpc.txfee);
+
+            foreach(var guild in settings.dallarSettings.guilds)
+            {
+                string toWallet;
+                client.GetWalletAddressFromUser(guild.tx.feeAccount, true, out toWallet);
+            }
 
             discord.Connected += Connected;
             discord.Disconnected += Disconnected;
@@ -57,7 +62,7 @@ namespace DallarBot.Services
             var Context = new SocketCommandContext(discord, message);
             if (Context.IsPrivate)
             {
-                var withdrawl = WithdrawlObjects.First(x => x.guildUser.Id == message.Author.Id);
+                var withdrawl = WithdrawlObjects.First(x => x.guildUser.Id == socketMessage.Author.Id);
                 if (withdrawl != null)
                 {
                     if (message.Content == "cancel")
@@ -70,22 +75,38 @@ namespace DallarBot.Services
                         string wallet = "";
                         bool success = true;
 
-                        success = client.GetWalletAddressFromUser(socketMessage.Author.Id, true, out wallet);
+                        success = client.GetWalletAddressFromUser(socketMessage.Author.Id.ToString(), true, out wallet);
                         if (success)
                         {
+                            decimal txfee;
+                            string feeAccount;
+                            GetTXFeeAndAccount(Context, out txfee, out feeAccount);
+
                             decimal balance = client.GetRawAccountBalance(Context.User.Id.ToString());
-                            if (balance >= withdrawl.amount)
+                            if (balance >= withdrawl.amount + txfee)
                             {
-                                if (message.Content.StartsWith("D") && message.Content.Length < 46)
+                                if (client.isAddressValid(message.Content))
                                 {
-                                    client.SendToAddress(Context.User.Id.ToString(), message.Content, withdrawl.amount);
-                                    await socketMessage.Author.SendMessageAsync("You have successfully withdrawn " + withdrawl.amount + "DAL!");
+                                    success = client.SendMinusFees(Context.User.Id.ToString(), message.Content, feeAccount, txfee, withdrawl.amount);
+                                    if (success)
+                                    {
+                                        await Context.User.SendMessageAsync("You have successfully withdrawn " + withdrawl.amount + "DAL!");
+                                    }
+                                    else
+                                    {
+                                        await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
+                                    }
                                     WithdrawlObjects.Remove(withdrawl);
+                                }
+                                else
+                                {
+                                    await Context.User.SendMessageAsync(Context.User.Mention + ", seems that address isn't quite right.");
                                 }
                             }
                             else
                             {
-                                await Context.Channel.SendMessageAsync("Hmmm, looks like you don't have the funds to do this!");
+                                await Context.User.SendMessageAsync(Context.User.Mention + ", looks like you don't have the funds to do this!");
+                                WithdrawlObjects.Remove(withdrawl);
                             }
                         }
                     }
@@ -141,6 +162,23 @@ namespace DallarBot.Services
         public string GetUserName(SocketGuildUser user)
         {
             return (user.Nickname == null || user.Nickname == "" ? user.Username : user.Nickname);
+        }
+
+        public void GetTXFeeAndAccount(SocketCommandContext context, out decimal txfee, out string feeAccount)
+        {
+            if (context.Guild != null)
+            {
+                var guild = settings.dallarSettings.guilds.First(x => x.guildID == context.Guild.Id);
+                if (guild != null)
+                {
+                    txfee = guild.tx.txfee;
+                    feeAccount = guild.tx.feeAccount;
+                    return;
+                }
+            }
+
+            txfee = 0.0002M;
+            feeAccount = "txaccount";
         }
     }
 }
