@@ -27,7 +27,7 @@
 		},
 		{
 			"command": "!difficulty",
-			"description": "Send DAL from your DallarBot Wallet to another user's DallarBot Wallet"
+			"description": "Get information about DAL difficulty and the blocks"
 		},
 		{
 			"command": "!balance",
