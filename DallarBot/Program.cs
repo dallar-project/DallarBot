@@ -8,6 +8,9 @@ using Discord.Commands;
 using Discord.WebSocket;
 
 using DallarBot.Services;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DallarBot
 { 

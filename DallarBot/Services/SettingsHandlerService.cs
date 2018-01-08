@@ -34,14 +34,21 @@ namespace DallarBot.Services
         public string port { get; set; }
         public string username { get; set; }
         public string password { get; set; }
-        public decimal txfee { get; set; }
     }
 
     public class SettingsGuild
     {
         public string displayName { get; set; }
         public ulong guildID { get; set; }
+        public SettingsTX tx { get; set; }
     }
+
+    public class SettingsTX
+    {
+        public decimal txfee { get; set; } = 0.0002M;
+        public string feeAccount { get; set; } = "txaccount";
+    }
+
     
     public class SettingsHelp
     {

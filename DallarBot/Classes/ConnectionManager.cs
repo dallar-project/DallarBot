@@ -69,11 +69,6 @@ namespace DallarBot.Classes
             }
         }
 
-        public bool SetTXFee(decimal amount)
-        {
-            return (bool)InvokeMethod("settxfee", amount)["result"];
-        }
-
         public string CreateNewAddressForUser(string accountName)
         {
             return InvokeMethod("getnewaddress", accountName)["result"].ToString();
@@ -127,10 +122,14 @@ namespace DallarBot.Classes
             return (list.Count >= 1);
         }
 
-        public bool SendToAddress(string fromAccount, string toWallet, decimal amount)
+        public string SendToAddress(string fromAccount, string toWallet, decimal amount)
         {
-            string TransactionID = InvokeMethod("sendfrom", fromAccount, toWallet, amount, 1, "")["result"].ToString();
-            return (TransactionID != null && TransactionID != "");
+            return InvokeMethod("sendfrom", fromAccount, toWallet, amount, 1, "")["result"].ToString();
+        }
+
+        public decimal GetTransactionFee(string txid)
+        {
+            return (decimal)InvokeMethod("gettransaction", txid)["result"]["fee"];
         }
 
         public bool MoveToAddress(string fromAccount, string toAccount, decimal amount)
@@ -139,24 +138,38 @@ namespace DallarBot.Classes
             return (TransactionID != null && TransactionID != "");
         }
 
+        public bool SendMinusFees(string fromAccount, string toWallet, string feeAccount, decimal txfee, decimal amount)
+        {
+            string txid = SendToAddress(fromAccount, toWallet, amount);
+            bool success = (txid != null || txid != "");
+            if (success)
+            {
+                decimal transactionFee = GetTransactionFee(txid);
+                decimal remainder = transactionFee + txfee;
+                success = MoveToAddress(fromAccount, feeAccount, remainder);
+                return success;
+            }
+            return false;
+        }
+
         public int GetBlockCount()
         {
             return (int)InvokeMethod("getblockcount")["result"];
         }
 
-        public bool GetWalletAddressFromUser(ulong userID, bool createIfNotFound, out string walletAddress)
+        public bool GetWalletAddressFromUser(string userID, bool createIfNotFound, out string walletAddress)
         {
             walletAddress = "";
-            if (DoesAccountExist(userID.ToString()))
+            if (DoesAccountExist(userID))
             {
-                walletAddress = GetAccountAddressSubtle(userID.ToString());
+                walletAddress = GetAccountAddressSubtle(userID);
                 return true;
             }
             else
             {
                 if (createIfNotFound)
                 {
-                    walletAddress = CreateNewAddressForUser(userID.ToString());
+                    walletAddress = CreateNewAddressForUser(userID);
                     return true;
                 }
                 else
@@ -164,6 +177,18 @@ namespace DallarBot.Classes
                     return false;
                 }
             }
+        }
+
+        public bool isAddressValid(string address)
+        {
+            if (address.Length > 20 && address.Length < 48)
+            {
+                if (!address.Contains("O") && !address.Contains("I") && !address.Contains("l") && !address.Contains("0"))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
