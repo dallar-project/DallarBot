@@ -18,6 +18,7 @@ namespace DallarBot.Services
         public DiscordSocketClient discord;
         private CommandService commands;
         private IServiceProvider provider;
+        private readonly SettingsHandlerService settings;
 
         public async Task InitializeAsync(IServiceProvider _provider)
         {
@@ -26,15 +27,16 @@ namespace DallarBot.Services
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 
-        public CommandHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands)
+        public CommandHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands, SettingsHandlerService _settings)
         {
             discord = _discord;
             commands = _commands;
             provider = _provider;
+            settings = _settings;
 
             discord.MessageReceived += HandleCommandAsync;
 
-            discord.SetGameAsync("Dallar");
+            discord.SetGameAsync(settings.dallarSettings.startup.taskName);
         }
 
         private async Task HandleCommandAsync(SocketMessage socketMessage)

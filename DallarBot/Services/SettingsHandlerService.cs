@@ -16,9 +16,16 @@ namespace DallarBot.Services
 {
     public class DiscordSettings
     {
+        public SettingsToken startup { get; set; }
         public SettingsRPC rpc { get; set; }
         public List<SettingsGuild> guilds { get; set; }
         public List<SettingsHelp> helpCommands { get; set; }
+    }
+
+    public class SettingsToken
+    {
+        public string token { get; set; }
+        public string taskName { get; set; }
     }
 
     public class SettingsRPC
@@ -43,28 +50,28 @@ namespace DallarBot.Services
 
     public class SettingsHandlerService
     {
-        public DiscordSocketClient _discord;
-        private CommandService _commands;
-        private IServiceProvider _provider;
-        public DiscordSettings settings;
+        public DiscordSocketClient discord;
+        private CommandService commands;
+        private IServiceProvider provider;
+        public DiscordSettings dallarSettings;
 
-        public async Task InitializeAsync(IServiceProvider provider)
+        public async Task InitializeAsync(IServiceProvider _provider)
         {
-            _provider = provider;
+            provider = _provider;
 
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
         }
 
-        public SettingsHandlerService(IServiceProvider provider, DiscordSocketClient discord, CommandService commands)
+        public SettingsHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands)
         {
-            _discord = discord;
-            _commands = commands;
-            _provider = provider;
+            discord = _discord;
+            commands = _commands;
+            provider = _provider;
 
             if (System.IO.File.Exists(Environment.CurrentDirectory + "/settings.json"))
             {
                 var loadedString = System.IO.File.ReadAllText(Environment.CurrentDirectory + "/settings.json");
-                settings = JsonConvert.DeserializeObject<DiscordSettings>(loadedString);
+                dallarSettings = JsonConvert.DeserializeObject<DiscordSettings>(loadedString);
             }
         }
     }
