@@ -56,8 +56,63 @@ namespace DallarBot.Services
                 var result = await commands.ExecuteAsync(context, argPos, provider);
                 if (result.Error == CommandError.MultipleMatches)
                 {
+                    if (message.Content.StartsWith("!send"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    else if (message.Content.StartsWith("!withdraw"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
                     await context.Message.DeleteAsync();
-                    await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                }
+                else if (result.Error == CommandError.ObjectNotFound)
+                {
+                    if (message.Content.StartsWith("!send"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    else if (message.Content.StartsWith("!withdraw"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    await context.Message.DeleteAsync();
+                }
+                else if (result.Error == CommandError.BadArgCount)
+                {
+                    if (message.Content.StartsWith("!send"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    else if (message.Content.StartsWith("!withdraw"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    await context.Message.DeleteAsync();
+                }
+                else if (result.Error == CommandError.ParseFailed)
+                {
+                    if (message.Content.StartsWith("!send"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    else if (message.Content.StartsWith("!withdraw"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    await context.Message.DeleteAsync();
+                }
+                else if (result.ErrorReason == "Sequence contains no matching element")
+                {
+                    if (message.Content.StartsWith("!send"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    else if (message.Content.StartsWith("!withdraw"))
+                    {
+                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                    }
+                    await context.Message.DeleteAsync();
                 }
             }
         }

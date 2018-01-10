@@ -1,0 +1,3 @@
+!give 2 @Allar 달  @Kanga 달
+!give 0.000001 @Kashaar 달
+!give 2 roko

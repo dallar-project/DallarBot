@@ -63,5 +63,15 @@ namespace DallarBot.Modules
         //    }
         //    await Context.Message.DeleteAsync();
         //}
+
+        [Command("giveafuck")]
+        public async Task GiveAFuck()
+        {
+            var user = Context.User as SocketGuildUser;
+            if (global.isUserAdmin(user) || global.isUserModerator(user) || global.isUserDevTeam(user))
+            {
+                await Context.Channel.SendMessageAsync(":regional_indicator_g: :regional_indicator_i: :regional_indicator_v: :regional_indicator_e: :a: :regional_indicator_f: :regional_indicator_u: :regional_indicator_c: :regional_indicator_k:");
+            }
+        }
     }
 }

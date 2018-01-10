@@ -152,6 +152,13 @@ namespace DallarBot.Services
             return user.Roles.Contains(moderatorRole);
         }
 
+        public bool isUserDevTeam(SocketGuildUser user)
+        {
+            var guild = discord.GetGuild(user.Guild.Id);
+            var devRole = guild.Roles.FirstOrDefault(x => x.Name == "Dallar Dev Team");
+            return user.Roles.Contains(devRole);
+        }
+
         public string CenterString(string value)
         {
             return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
