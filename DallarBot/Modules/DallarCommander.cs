@@ -221,29 +221,7 @@ namespace DallarBot.Modules
                         global.GetTXFeeAndAccount(Context, out txfee, out feeAccount);
 
                         decimal amount = global.client.GetRawAccountBalance(Context.User.Id.ToString()) - txfee;
-                        if (amount > 0)
-                        {
-                            if (global.WithdrawlObjects.Any(x => x.guildUser.Id == Context.User.Id))
-                            {
-                                WithdrawManager withdrawlObject = global.WithdrawlObjects.First(x => x.guildUser.Id == Context.User.Id);
-                                withdrawlObject.amount = amount;
-                                await Context.User.SendMessageAsync("Please respond with your wallet addresss to withdraw " + amount + "DAL or `cancel` to cancel the withdraw.");
-                            }
-                            else
-                            {
-                                WithdrawManager withdrawlObject = new WithdrawManager(Context.User as SocketGuildUser, amount);
-                                global.WithdrawlObjects.Add(withdrawlObject);
-                                await Context.User.SendMessageAsync("Please respond with your wallet addresss to withdraw " + amount + "DAL or `cancel` to cancel the withdraw.");
-                            }
-                        }
-                        else
-                        {
-                            await Context.User.SendMessageAsync(Context.User.Mention + ", looks like you don't have enough funds withdraw " + amount + "DAL!");
-                        }
-                    }
-                    else
-                    {
-                        await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
+                        await WithdrawFromWallet(amount);
                     }
                 }
                 else
@@ -319,6 +297,20 @@ namespace DallarBot.Modules
 
         [Command("send")]
         [Alias("give", "transfer")]
+        public async Task SendDallarToUser(SocketUser guildUser, decimal amount)
+        {
+            await SendDallarToUser(amount, guildUser);
+        }
+
+        [Command("send")]
+        [Alias("give", "transfer")]
+        public async Task SendDallarToUser(SocketUser guildUser, string amountString)
+        {
+            await SendDallarToUser(amountString, guildUser);
+        }
+
+        [Command("send")]
+        [Alias("give", "transfer")]
         public async Task SendDallarToUser(decimal amount, SocketUser guildUser)
         {
             if (!Context.IsPrivate)
@@ -384,7 +376,7 @@ namespace DallarBot.Modules
 
         [Command("send")]
         [Alias("give", "transfer")]
-        public async Task SendAllToUser(string amountString, SocketUser guildUser)
+        public async Task SendDallarToUser(string amountString, SocketUser guildUser)
         {
             if (!Context.IsPrivate)
             {
@@ -445,106 +437,6 @@ namespace DallarBot.Modules
             {
                 await Context.User.SendMessageAsync("Sorry, you cannot do this command here.");
             }
-        }
-
-        [Command("send")]
-        [Alias("give", "transfer")]
-        public async Task ErrorSend()
-        {
-            if (!Context.IsPrivate)
-            {
-                await Context.User.SendMessageAsync(Context.User.Mention + ", you need to specify the amount of funds and the recipient." + Environment.NewLine + "!send <amount> <tag user>");
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, you cannot do this command here.");
-            }
-        }
-
-        [Command("send")]
-        [Alias("give", "transfer")]
-        public async Task ErrorSend(decimal amount)
-        {
-            if (!Context.IsPrivate)
-            {
-                await Context.User.SendMessageAsync(Context.User.Mention + ", you need to specify the recipient." + Environment.NewLine + "!send <amount> <tag user>");
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, you cannot do this command here.");
-            }
-        }
-
-        [Command("send")]
-        [Alias("give", "transfer")]
-        public async Task ErrorSend(string remainderString)
-        {
-            if (!Context.IsPrivate)
-            {
-                if (remainderString == "all")
-                {
-                    await Context.User.SendMessageAsync(Context.User.Mention + ", you need to specify the recipient." + Environment.NewLine + "!send <amount> <tag user>");
-                }
-                else
-                {
-                    await Context.User.SendMessageAsync(Context.User.Mention + ", you forgot to specify the amount." + Environment.NewLine + "!send <amount> <tag user>");
-                }
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, you cannot do this command here.");
-            }
-        }
-
-        [Command("withdraw")]
-        public async Task ErrorWithdraw()
-        {
-            if (!Context.IsPrivate)
-            {
-                await Context.User.SendMessageAsync(Context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!withdraw <amount> <address>");
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, for now you have to use withdraw commands in a server. We're working on this.");
-            }
-        }
-
-        [Command("withdraw")]
-        public async Task ErrorWithdraw([Remainder]string remainingString)
-        {
-            if (!Context.IsPrivate)
-            {
-                await Context.User.SendMessageAsync(Context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!withdraw <amount> <address>");
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, for now you have to use withdraw commands in a server. We're working on this.");
-            }
-        }
-
-        [Command("withdraw")]
-        public async Task ErrorWithdraw(decimal amount)
-        {
-            if (!Context.IsPrivate)
-            {
-                await Context.User.SendMessageAsync(Context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!withdraw <amount> <address>");
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, for now you have to use withdraw commands in a server. We're working on this.");
-            }
-        }
-
-        [Command("deposit")]
-        public async Task ErrorDeposit([Remainder]string remainingString)
-        {
-            await GetDallarDeposit();
         }
     }
 }
