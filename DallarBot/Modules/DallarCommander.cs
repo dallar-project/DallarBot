@@ -77,7 +77,6 @@ namespace DallarBot.Modules
                         Environment.NewLine + "`" + wallet + "`" + Environment.NewLine +
                         Environment.NewLine + "```!balance\n!give\n!withdraw```" + Environment.NewLine +
                         Environment.NewLine + "PS: On our current roadmap, we are investigating being able to send dallars directly as message reactions, so that we can tip people a small fixed amount for a specific highly appreciated post.");
-
                 }
                 else
                 {
@@ -437,6 +436,27 @@ namespace DallarBot.Modules
             {
                 await Context.User.SendMessageAsync("Sorry, you cannot do this command here.");
             }
+        }
+
+        [Command("createJob")]
+        public async Task CreateJob(decimal amount, string title, [Remainder]string description)
+        {
+            //Random rand = new Random();
+            //float r = map(rand.Next(255), 0, 255, 0, 1);
+            //float g = map(rand.Next(255), 0, 255, 0, 1);
+            //float b = map(rand.Next(255), 0, 255, 0, 1);
+            //EmbedBuilder embed = new EmbedBuilder();
+            //embed.Title = title;
+            //embed.Description = description;
+            //embed.Color = new Color(r, g, b);
+            //embed.AddInlineField("Rate", amount);
+            //embed.AddInlineField("From", Context.User.Mention);
+            //await Context.Channel.SendMessageAsync("", false, embed);
+        }
+
+        float map(float s, float a1, float a2, float b1, float b2)
+        {
+            return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
         }
     }
 }
