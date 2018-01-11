@@ -60,10 +60,6 @@ namespace DallarBot.Services
                     {
                         await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
                     }
-                    else if (message.Content.StartsWith("!withdraw"))
-                    {
-                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
-                    }
                     await context.Message.DeleteAsync();
                 }
                 else if (result.Error == CommandError.ObjectNotFound)
@@ -82,11 +78,11 @@ namespace DallarBot.Services
                 {
                     if (message.Content.StartsWith("!send"))
                     {
-                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                        await context.User.SendMessageAsync(context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!send <amount> <tag user>");
                     }
                     else if (message.Content.StartsWith("!withdraw"))
                     {
-                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                        await context.User.SendMessageAsync(context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!withdraw <amount> <address (optional)>");
                     }
                     await context.Message.DeleteAsync();
                 }
@@ -94,11 +90,11 @@ namespace DallarBot.Services
                 {
                     if (message.Content.StartsWith("!send"))
                     {
-                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                        await context.User.SendMessageAsync(context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!send <amount> <tag user>");
                     }
                     else if (message.Content.StartsWith("!withdraw"))
                     {
-                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                        await context.User.SendMessageAsync(context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!withdraw <amount> <address (optional)>");
                     }
                     await context.Message.DeleteAsync();
                 }
@@ -106,11 +102,11 @@ namespace DallarBot.Services
                 {
                     if (message.Content.StartsWith("!send"))
                     {
-                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                        await context.User.SendMessageAsync(context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!send <amount> <tag user>");
                     }
                     else if (message.Content.StartsWith("!withdraw"))
                     {
-                        await context.User.SendMessageAsync("There are multiple users with that name, please mention the person you are sending to with an @.");
+                        await context.User.SendMessageAsync(context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!withdraw <amount> <address (optional)>");
                     }
                     await context.Message.DeleteAsync();
                 }
