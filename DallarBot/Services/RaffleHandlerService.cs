@@ -23,6 +23,8 @@ namespace DallarBot.Services
         private IServiceProvider provider;
         public ConnectionManager client;
         private readonly SettingsHandlerService settings;
+        List<SocketGuildUser> raffleList = new List<SocketGuildUser>();
+        public bool isRaffleRunning = false;
         DateTime resetTime;
 
         public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
@@ -40,6 +42,28 @@ namespace DallarBot.Services
             commands = _commands;
             provider = _provider;
             settings = _settings;
+        }
+        public void AddUserToRaffle(SocketGuildUser user)
+        {
+            if (!raffleList.Contains(user))
+            {
+                raffleList.Add(user);
+            }
+        }
+
+        public SocketGuildUser DrawUser()
+        {
+            RandomManager manager = new RandomManager(0, raffleList.Count - 1);
+            if (manager.result < raffleList.Count)
+            {
+                var user = raffleList[manager.result];
+                var guild = discord.GetGuild(user.Guild.Id);
+                if (guild.Users.Contains(user))
+                {
+                    return user;
+                }
+            }
+            return null;
         }
 
         public void SetResetTime()

@@ -10,8 +10,27 @@ using Newtonsoft.Json.Linq;
 
 namespace DallarBot.Classes
 {
+    public class RandomJSON
+    {
+        public RandomResult result { get; set; }
+    }
+
+    public class RandomResult
+    {
+        public RandomData random { get; set; }
+    }
+
+    public class RandomData
+    {
+        public int BitsUsed { get; set; }
+        public List<int> data { get; set; }
+    }
+
+
     public class RandomManager
     {
+        public int result = -1;
+
         public RandomManager(Int64 min, Int64 max)
         {
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create("https://api.random.org/json-rpc/1/invoke");
@@ -47,7 +66,8 @@ namespace DallarBot.Classes
                     using (StreamReader sr = new StreamReader(str))
                     {
                         string rte = sr.ReadToEnd();
-                        var obj = JsonConvert.DeserializeObject<JObject>(rte);
+                        RandomJSON data = JsonConvert.DeserializeObject<RandomJSON>(rte);
+                        result = data.result.random.data[0];
                     }
                 }
             }
