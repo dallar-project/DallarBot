@@ -295,21 +295,21 @@ namespace DallarBot.Modules
         }
 
         [Command("send")]
-        [Alias("give", "transfer")]
+        [Alias("gift", "transfer", "give")]
         public async Task SendDallarToUser(SocketUser guildUser, decimal amount)
         {
             await SendDallarToUser(amount, guildUser);
         }
 
         [Command("send")]
-        [Alias("give", "transfer")]
+        [Alias("gift", "transfer", "give")]
         public async Task SendDallarToUser(SocketUser guildUser, string amountString)
         {
             await SendDallarToUser(amountString, guildUser);
         }
 
         [Command("send")]
-        [Alias("give", "transfer")]
+        [Alias("gift", "transfer", "give")]
         public async Task SendDallarToUser(decimal amount, SocketUser guildUser)
         {
             if (!Context.IsPrivate)
@@ -374,7 +374,7 @@ namespace DallarBot.Modules
         }
 
         [Command("send")]
-        [Alias("give", "transfer")]
+        [Alias("gift", "transfer", "give")]
         public async Task SendDallarToUser(string amountString, SocketUser guildUser)
         {
             if (!Context.IsPrivate)
@@ -438,25 +438,16 @@ namespace DallarBot.Modules
             }
         }
 
-        [Command("createJob")]
-        public async Task CreateJob(decimal amount, string title, [Remainder]string description)
+        [Command("send-random")]
+        [Alias("gift-random", "transfer-random", "give-random")]
+        public async Task SendRandomUser(decimal amount)
         {
-            //Random rand = new Random();
-            //float r = map(rand.Next(255), 0, 255, 0, 1);
-            //float g = map(rand.Next(255), 0, 255, 0, 1);
-            //float b = map(rand.Next(255), 0, 255, 0, 1);
-            //EmbedBuilder embed = new EmbedBuilder();
-            //embed.Title = title;
-            //embed.Description = description;
-            //embed.Color = new Color(r, g, b);
-            //embed.AddInlineField("Rate", amount);
-            //embed.AddInlineField("From", Context.User.Mention);
-            //await Context.Channel.SendMessageAsync("", false, embed);
-        }
-
-        float map(float s, float a1, float a2, float b1, float b2)
-        {
-            return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
+            int randomIndex = new RandomManager(0, Context.Guild.Users.Count - 1).result;
+            SocketGuildUser user = Context.Guild.Users.ToArray()[randomIndex];
+            if (user != null)
+            {
+                await SendDallarToUser(amount, user);
+            }
         }
     }
 }
