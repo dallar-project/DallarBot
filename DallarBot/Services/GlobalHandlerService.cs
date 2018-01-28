@@ -19,25 +19,15 @@ namespace DallarBot.Services
     public class GlobalHandlerService
     {
         public DiscordSocketClient discord;
-        private CommandService commands;
-        private IServiceProvider provider;
         public ConnectionManager client;
         private readonly SettingsHandlerService settings;
 
         public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
+        
 
-        public async Task InitializeAsync(IServiceProvider _provider)
-        {
-            provider = _provider;
-
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
-        }
-
-        public GlobalHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands, SettingsHandlerService _settings)
+        public GlobalHandlerService(DiscordSocketClient _discord, SettingsHandlerService _settings)
         {
             discord = _discord;
-            commands = _commands;
-            provider = _provider;
             settings = _settings;
 
             client = new ConnectionManager(settings.dallarSettings.rpc.ipaddress + ":" + settings.dallarSettings.rpc.port);
@@ -49,8 +39,6 @@ namespace DallarBot.Services
                 client.GetWalletAddressFromUser(guild.tx.feeAccount, true, out toWallet);
             }
 
-            discord.Connected += Connected;
-            discord.Disconnected += Disconnected;
             discord.MessageReceived += MessageReceived;
         }
 
@@ -116,28 +104,6 @@ namespace DallarBot.Services
             }
         }
 
-        private Task Disconnected(Exception ex)
-        {
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("Something went wrong..."));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString(ex.Message));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-            return Task.Delay(0);
-        }
-
-        private Task Connected()
-        {
-            Console.WriteLine(CenterString("Bot is online!"));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-            return Task.Delay(0);
-        }
-
         public bool isUserAdmin(SocketGuildUser user)
         {
             var guild = discord.GetGuild(user.Guild.Id);
@@ -159,16 +125,6 @@ namespace DallarBot.Services
             return user.Roles.Contains(devRole);
         }
 
-        public string CenterString(string value)
-        {
-            return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
-        }
-
-        public string GetUserName(SocketGuildUser user)
-        {
-            return (user.Nickname == null || user.Nickname == "" ? user.Username : user.Nickname);
-        }
-
         public void GetTXFeeAndAccount(SocketCommandContext context, out decimal txfee, out string feeAccount)
         {
             if (context.Guild != null)
@@ -184,11 +140,6 @@ namespace DallarBot.Services
 
             txfee = 0.0002M;
             feeAccount = "txaccount";
-        }
-
-        float map(float s, float a1, float a2, float b1, float b2)
-        {
-            return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
         }
     }
 }

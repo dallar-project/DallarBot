@@ -18,31 +18,23 @@ namespace DallarBot.Services
 {
     public class RaffleHandlerService
     {
-        public DiscordSocketClient discord;
-        private CommandService commands;
-        private IServiceProvider provider;
         public ConnectionManager client;
+        public DiscordSocketClient discord;
         private readonly SettingsHandlerService settings;
+
         List<SocketGuildUser> raffleList = new List<SocketGuildUser>();
         public bool isRaffleRunning = false;
         DateTime resetTime;
 
         public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
+        
 
-        public async Task InitializeAsync(IServiceProvider _provider)
-        {
-            provider = _provider;
-
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
-        }
-
-        public RaffleHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands, SettingsHandlerService _settings)
+        public RaffleHandlerService(DiscordSocketClient _discord, SettingsHandlerService _settings)
         {
             discord = _discord;
-            commands = _commands;
-            provider = _provider;
             settings = _settings;
         }
+
         public void AddUserToRaffle(SocketGuildUser user)
         {
             if (!raffleList.Contains(user))
