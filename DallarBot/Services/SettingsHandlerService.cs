@@ -58,24 +58,10 @@ namespace DallarBot.Services
 
     public class SettingsHandlerService
     {
-        public DiscordSocketClient discord;
-        private CommandService commands;
-        private IServiceProvider provider;
         public DiscordSettings dallarSettings;
 
-        public async Task InitializeAsync(IServiceProvider _provider)
+        public SettingsHandlerService()
         {
-            provider = _provider;
-
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
-        }
-
-        public SettingsHandlerService(IServiceProvider _provider, DiscordSocketClient _discord, CommandService _commands)
-        {
-            discord = _discord;
-            commands = _commands;
-            provider = _provider;
-
             if (System.IO.File.Exists(Environment.CurrentDirectory + "/settings.json"))
             {
                 var loadedString = System.IO.File.ReadAllText(Environment.CurrentDirectory + "/settings.json");
