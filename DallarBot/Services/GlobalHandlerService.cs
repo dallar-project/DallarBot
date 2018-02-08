@@ -20,6 +20,7 @@ namespace DallarBot.Services
     {
         public DiscordSocketClient discord;
         public ConnectionManager client;
+        public QRGenerator qr = new QRGenerator();
         private readonly SettingsHandlerService settings;
 
         public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
