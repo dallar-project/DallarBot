@@ -13,9 +13,9 @@ namespace DallarBot.Classes
         public MemoryStream GenerateQRBitmap(string key)
         {
             var generator = new QRCodeGenerator();
-            var data = generator.CreateQrCode(key, QRCodeGenerator.ECCLevel.Q);
+            var data = generator.CreateQrCode(key, QRCodeGenerator.ECCLevel.L);
             var code = new QRCode(data);
-            var bitmap = code.GetGraphic(20);
+            var bitmap = code.GetGraphic(5);
 
             var stream = new MemoryStream();
             bitmap.Save(stream, bitmap.RawFormat);
