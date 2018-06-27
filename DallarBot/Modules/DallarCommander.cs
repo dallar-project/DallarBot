@@ -297,21 +297,21 @@ namespace DallarBot.Modules
 
         [Command("send")]
         [Alias("gift", "transfer", "give")]
-        public async Task SendDallarToUser(SocketUser guildUser, decimal amount)
+        public async Task SendDallarToUser(IUser user, decimal amount)
         {
-            await SendDallarToUser(amount, guildUser);
+            await SendDallarToUser(amount, user);
         }
 
         [Command("send")]
         [Alias("gift", "transfer", "give")]
-        public async Task SendDallarToUser(SocketUser guildUser, string amountString)
+        public async Task SendDallarToUser(IUser user, string amountString)
         {
-            await SendDallarToUser(amountString, guildUser);
+            await SendDallarToUser(amountString, user);
         }
 
         [Command("send")]
         [Alias("gift", "transfer", "give")]
-        public async Task SendDallarToUser(decimal amount, SocketUser guildUser)
+        public async Task SendDallarToUser(decimal amount, IUser user)
         {
             if (!Context.IsPrivate)
             {
@@ -322,10 +322,10 @@ namespace DallarBot.Modules
                 success = global.client.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out fromWallet);
                 if (success)
                 {
-                    success = global.client.GetWalletAddressFromUser(guildUser.Id.ToString(), true, out toWallet);
+                    success = global.client.GetWalletAddressFromUser(user.Id.ToString(), true, out toWallet);
                     if (success)
                     {
-                        if (Context.User.Id != guildUser.Id)
+                        if (Context.User.Id != user.Id)
                         {
                             if (amount > 0)
                             {
@@ -376,7 +376,7 @@ namespace DallarBot.Modules
 
         [Command("send")]
         [Alias("gift", "transfer", "give")]
-        public async Task SendDallarToUser(string amountString, SocketUser guildUser)
+        public async Task SendDallarToUser(string amountString, IUser user)
         {
             if (!Context.IsPrivate)
             {
@@ -389,10 +389,10 @@ namespace DallarBot.Modules
                     success = global.client.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out fromWallet);
                     if (success)
                     {
-                        success = global.client.GetWalletAddressFromUser(guildUser.Id.ToString(), true, out toWallet);
+                        success = global.client.GetWalletAddressFromUser(user.Id.ToString(), true, out toWallet);
                         if (success)
                         {
-                            if (Context.User.Id != guildUser.Id)
+                            if (Context.User.Id != user.Id)
                             {
                                 decimal txfee;
                                 string feeAccount;
