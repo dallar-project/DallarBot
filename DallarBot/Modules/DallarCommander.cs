@@ -444,7 +444,7 @@ namespace DallarBot.Modules
         public async Task SendRandomUser(decimal amount)
         {
             int randomIndex = new RandomManager(0, Context.Guild.Users.Count - 1).result;
-            SocketGuildUser user = Context.Guild.Users.ToArray()[randomIndex];
+            var user = Context.Guild.Users.Where(x => x.IsBot == false).ToList()[randomIndex];
             if (user != null)
             {
                 await SendDallarToUser(amount, user);
