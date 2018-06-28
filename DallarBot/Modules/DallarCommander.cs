@@ -19,12 +19,10 @@ namespace DallarBot.Modules
     public class DallarCommander : ModuleBase<SocketCommandContext>
     {
         private readonly GlobalHandlerService global;
-        private readonly SettingsHandlerService settings;
 
-        public DallarCommander(GlobalHandlerService _global, SettingsHandlerService _settings)
+        public DallarCommander(GlobalHandlerService _global)
         {
             global = _global;
-            settings = _settings;
         }
 
         [Command("balance")]
@@ -339,7 +337,7 @@ namespace DallarBot.Modules
                                     success = global.client.SendMinusFees(Context.User.Id.ToString(), toWallet, feeAccount, txfee, amount);
                                     if (success)
                                     {
-                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + "DAL to " + guildUser.Mention + "!");
+                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + "DAL to " + user.Mention + "!");
                                     }
                                     else
                                     {
@@ -404,7 +402,7 @@ namespace DallarBot.Modules
                                     success = global.client.SendMinusFees(Context.User.Id.ToString(), toWallet, feeAccount, txfee, amount);
                                     if (success)
                                     {
-                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + "DAL to " + guildUser.Mention + "!");
+                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + "DAL to " + user.Mention + "!");
                                     }
                                     else
                                     {
@@ -441,13 +439,27 @@ namespace DallarBot.Modules
 
         [Command("send-random")]
         [Alias("gift-random", "transfer-random", "give-random")]
+        public async Task SendRandomUser()
+        {
+            await Context.User.SendMessageAsync("Please specify the amount of DAL to give.");
+        }
+
+        [Command("send-random")]
+        [Alias("gift-random", "transfer-random", "give-random")]
         public async Task SendRandomUser(decimal amount)
         {
-            int randomIndex = new RandomManager(0, Context.Guild.Users.Count - 1).result;
-            var user = Context.Guild.Users.Where(x => x.IsBot == false).ToList()[randomIndex];
-            if (user != null)
+            if (amount > 0)
             {
-                await SendDallarToUser(amount, user);
+                int randomIndex = new RandomManager(0, Context.Guild.Users.Count - 1).result;
+                var user = Context.Guild.Users.Where(x => x.IsBot == false).ToList()[randomIndex];
+                if (user != null)
+                {
+                    await SendDallarToUser(amount, user);
+                }
+            }
+            else
+            {
+				await Context.User.SendMessageAsync("Please specify a valid amount of DAL to give.");
             }
         }
     }

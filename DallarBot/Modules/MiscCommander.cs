@@ -19,12 +19,10 @@ namespace DallarBot.Modules
     public class MiscCommander : ModuleBase<SocketCommandContext>
     {
         private readonly GlobalHandlerService global;
-        private readonly SettingsHandlerService settings;
 
-        public MiscCommander(GlobalHandlerService _global, SettingsHandlerService _settings)
+        public MiscCommander(GlobalHandlerService _global)
         {
             global = _global;
-            settings = _settings;
         }
 
         //[Command("life")]

@@ -26,6 +26,13 @@ namespace DallarBot.Services
             discord.Ready += Ready;
 
             discord.Disconnected += Disconnected;
+
+            discord.Log += Log;
+        }
+
+        private async Task Log(LogMessage arg)
+        {
+            await System.IO.File.AppendAllTextAsync(Environment.CurrentDirectory + "/log.txt", arg.Message);
         }
 
         private Task Disconnected(Exception ex)
