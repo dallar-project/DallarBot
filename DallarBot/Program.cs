@@ -33,7 +33,10 @@ namespace DallarBot
 
             Console.WriteLine(CenterString("Initialising bot..."));
 
-            client = new DiscordSocketClient();
+            client = new DiscordSocketClient(new DiscordSocketConfig()
+            {
+                LogLevel = LogSeverity.Verbose
+            });
 
             var services = ConfigureServices();
             await services.GetRequiredService<CommandHandlerService>().InitializeAsync(services);
