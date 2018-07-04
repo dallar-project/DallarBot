@@ -29,6 +29,8 @@ namespace DallarBot.Modules
         [Alias("bal")]
         public async Task GetAccountBalance()
         {
+            await global.FetchValueInfo();
+
             string wallet = "";
             bool success = true;
 
@@ -38,8 +40,8 @@ namespace DallarBot.Modules
                 decimal balance = global.client.GetRawAccountBalance(Context.User.Id.ToString());
                 decimal pendingBalance = global.client.GetUnconfirmedAccountBalance(Context.User.Id.ToString());
 
-                await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + balance + "DAL" +
-                (pendingBalance != 0 ? " (" + pendingBalance + "DAL Pending)" : ""));
+                await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + balance + "DAL ($" + decimal.Round(balance * global.usdValue, 4) + " USD)" +
+                (pendingBalance != 0 ? " with " + pendingBalance + "DAL Pending" : ""));
             }
             else
             {
@@ -313,6 +315,8 @@ namespace DallarBot.Modules
         {
             if (!Context.IsPrivate)
             {
+                await global.FetchValueInfo();
+
                 string fromWallet = "";
                 string toWallet = "";
                 bool success = true;
@@ -337,7 +341,7 @@ namespace DallarBot.Modules
                                     success = global.client.SendMinusFees(Context.User.Id.ToString(), toWallet, feeAccount, txfee, amount);
                                     if (success)
                                     {
-                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + "DAL to " + user.Mention + "!");
+                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + " DAL ($" + decimal.Round(amount * global.usdValue, 4) + "USD) to " + user.Mention + "!");
                                     }
                                     else
                                     {
@@ -380,6 +384,8 @@ namespace DallarBot.Modules
             {
                 if (amountString == "all")
                 {
+                    await global.FetchValueInfo();
+
                     string fromWallet = "";
                     string toWallet = "";
                     bool success = true;
@@ -402,7 +408,7 @@ namespace DallarBot.Modules
                                     success = global.client.SendMinusFees(Context.User.Id.ToString(), toWallet, feeAccount, txfee, amount);
                                     if (success)
                                     {
-                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + "DAL to " + user.Mention + "!");
+                                        await Context.Channel.SendMessageAsync("Success! " + Context.User.Mention + " has sent " + amount + " DAL ($" + decimal.Round(amount * global.usdValue, 4) + "USD) to " + user.Mention + "!");
                                     }
                                     else
                                     {
