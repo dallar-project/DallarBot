@@ -60,6 +60,11 @@ namespace DallarBot.Modules
         [Command("deposit")]
         public async Task GetDallarDeposit()
         {
+            if (!Context.IsPrivate)
+            {
+                await Context.Message.DeleteAsync();
+            }
+
             if (!Context.IsPrivate || Context.IsPrivate)
             {
                 string wallet = "";
@@ -75,13 +80,14 @@ namespace DallarBot.Modules
                         Environment.NewLine + "Every transaction needs to be verified by the blockchain for 6 blocks(5 - 10 minute period approximate.) If you check your balances right after a transaction, it will notify your transaction as " + '\u0022' + "pending" + '\u0022' + " Any pending funds will not be available until that period has been completed." + Environment.NewLine +
                         Environment.NewLine + "To deposit Dallar into your DallarBot account, please send funds from your wallet to the following address: " +
                         Environment.NewLine + "`" + wallet + "`");
-                    await Context.User.SendFileAsync(global.qr.GenerateQRBitmap("dallar:" + wallet), "Wallet.png");
+
+                    // This is causing a rate limit and/or crash?
+                    //await Context.User.SendFileAsync(global.qr.GenerateQRBitmap("dallar:" + wallet), "Wallet.png");
                 }
                 else
                 {
                     await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
                 }
-                await Context.Message.DeleteAsync();
             }
         }
 
