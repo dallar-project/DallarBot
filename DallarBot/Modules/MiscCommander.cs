@@ -74,6 +74,44 @@ namespace DallarBot.Modules
             }
         }
 
+        /** USD to Dallar **/
+
+        [Command("usd")]
+        [Alias("usd-dal")]
+        public async Task USDToDallar()
+        {
+            await USDToDallar(1m);
+        }
+
+        [Command("usd")]
+        [Alias("usd-dal")]
+        public async Task USDToDallar(decimal amount)
+        {
+            await global.FetchValueInfo();
+            var Info = String.Format("{0:#,##0.########}", amount) + " USD is " + String.Format("{0:#,##0.########}", decimal.Round(amount / global.usdValue, 8)) + " DAL.";
+            await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + Info);
+        }
+
+        /** BTC to Dallar */
+
+        [Command("btc")]
+        [Alias("btc-dal")]
+        public async Task BTCToDallar()
+        {
+            await BTCToDallar(1m);
+        }
+
+        [Command("btc")]
+        [Alias("btc-dal")]
+        public async Task BTCToDallar(decimal amount)
+        {
+            await global.FetchValueInfo();
+            var Info = String.Format("{0:#,##0.########}", amount) + " BTC is " + String.Format("{0:#,##0.########}", decimal.Round(amount / global.DallarInfo.Price, 8)) + " DAL.";
+            await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + Info);
+        }
+
+        /** Dallar to BTC/USD */
+
         [Command("dal")]
         [Alias("dal-btc", "dal-usd", "dalvalue")]
         public async Task DallarValueInfo()
@@ -91,13 +129,15 @@ namespace DallarBot.Modules
             float.TryParse(global.DallarInfo.PriceChange.TrimEnd('%'), out percentChange);
             var changeEmoji = percentChange >= 0.0f ? ":chart_with_upwards_trend:" : ":chart_with_downwards_trend:";
 
-            var Info = amount.ToString() + " DAL to BTC: " + decimal.Round((global.DallarInfo.Price * amount), 8, MidpointRounding.AwayFromZero).ToString() + " BTC" + Environment.NewLine +
-                amount.ToString() + " DAL to USD: $" + global.usdValue * amount + " :dollar:" + Environment.NewLine +
+            var Info = String.Format("{0:#,##0.########}", amount) + " DAL to BTC: " + String.Format("{0:#,##0.########}", decimal.Round((global.DallarInfo.Price * amount), 8, MidpointRounding.AwayFromZero)) + " BTC" + Environment.NewLine +
+                String.Format("{0:#,##0.########}", amount) + " DAL to USD: $" + global.usdValue * amount + " :dollar:" + Environment.NewLine +
                 "24 Hour Stats: :arrow_down_small: " + decimal.Round((global.DallarInfo.Low.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero) + " sats / :arrow_up_small: " + decimal.Round((global.DallarInfo.High.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero) + " sats / :arrows_counterclockwise: " + global.DallarInfo.VolumeMarket + Environment.NewLine +
                 changeEmoji + " " + global.DallarInfo.PriceChange + " Change in 24 Hours" + Environment.NewLine;
 
             await Context.Channel.SendMessageAsync(Info);
         }
+
+        /** Dad Joke API Puller */
 
         [Command("dad")]
         public async Task FetchDadJoke()
