@@ -25,9 +25,14 @@ namespace DallarBot.Modules
     {
         private readonly GlobalHandlerService global;
 
+        protected string[] YoMommaJokes;
+        protected Random YoMommaRandom;
+
         public MiscCommander(GlobalHandlerService _global)
         {
             global = _global;
+            YoMommaJokes = new string[] { };
+            YoMommaRandom = new Random();
         }
 
         //[Command("life")]
@@ -172,6 +177,27 @@ namespace DallarBot.Modules
             {
                 await Context.Channel.SendMessageAsync(Context.User.Mention + ": Failed to fetch joke.");
             }            
+        }
+
+        public bool PopulateMommaJokes()
+        {
+            if (YoMommaJokes.Length == 0)
+            {
+                YoMommaJokes = File.ReadAllLines("momma.txt");
+            }
+
+            return YoMommaJokes.Length > 1;
+        }
+
+        [Command("momma")]
+        [Alias("mama","mom")]
+        public async Task FetchMommaJoke()
+        {
+            if (PopulateMommaJokes())
+            {
+                var joke = YoMommaJokes[YoMommaRandom.Next(1, YoMommaJokes.Length)];
+                await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + joke);
+            }
         }
     }
 }
