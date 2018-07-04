@@ -190,7 +190,7 @@ namespace DallarBot.Modules
         }
 
         [Command("momma")]
-        [Alias("mama","mom")]
+        [Alias("mama","mom", "mum")]
         public async Task FetchMommaJoke()
         {
             if (PopulateMommaJokes())
