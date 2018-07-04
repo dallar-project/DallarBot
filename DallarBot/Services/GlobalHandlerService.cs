@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 
 using DallarBot.Classes;
 using DallarBot.Services;
+using DallarBot.Exchanges;
 
 namespace DallarBot.Services
 {
@@ -22,6 +23,10 @@ namespace DallarBot.Services
         public ConnectionManager client;
         public QRGenerator qr = new QRGenerator();
         private readonly SettingsHandlerService settings;
+
+        public decimal usdValue;
+        public DigitalPriceDallarInfo DallarInfo;
+        protected DateTime lastFetchTime;
 
         public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
         
@@ -141,6 +146,31 @@ namespace DallarBot.Services
 
             txfee = 0.0002M;
             feeAccount = "txaccount";
+        }
+
+        public async Task FetchValueInfo()
+        {
+            if (DateTime.Compare(lastFetchTime, DateTime.Now.AddSeconds(-5.0d)) < 0)
+            {
+                Console.WriteLine("Fetching Dallar info from DigitalPrice.");
+
+                var client = new WebClient();
+                var jsonString = await client.DownloadStringTaskAsync("https://digitalprice.io/markets/get-currency-summary?currency=BALANCE_COIN_BITCOIN");
+                var btcPrice = await client.DownloadStringTaskAsync("https://blockchain.info/tobtc?currency=USD&value=1");
+
+                var DigitalPriceInfo = DigitalPriceDallarInfo.FromJson(jsonString);
+
+                for (int i = 0; i < DigitalPriceInfo.Length; i++)
+                {
+                    if (DigitalPriceInfo[i].MiniCurrency == "dal-btc")
+                    {
+                        DallarInfo = DigitalPriceInfo[i];
+                    }
+                }
+
+                usdValue = decimal.Round(DallarInfo.Price / Convert.ToDecimal(btcPrice), 8, MidpointRounding.AwayFromZero);
+                lastFetchTime = DateTime.Now;
+            }
         }
     }
 }
