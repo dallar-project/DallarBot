@@ -165,6 +165,7 @@ namespace DallarBot.Modules
             {
                 dynamic jokeResult = JsonConvert.DeserializeObject(content);
                 string joke = jokeResult.value.joke;
+                joke = System.Net.WebUtility.HtmlDecode(joke);
                 await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + joke);
             }
             catch
