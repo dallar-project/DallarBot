@@ -1,10 +1,5 @@
-// To parse this JSON data, add NuGet 'Newtonsoft.Json' then do:
-//
-//    using DigitalPrice_Json;
-//
-//    var DigitalPriceConvert = DallarSerialization.FromJson(jsonString);
-
-namespace DigitalPrice_Json
+/* Fetches json data from the DigialPrice exchange. */
+namespace DallarBot.Exchanges
 {
     using System;
     using System.Collections.Generic;
@@ -16,7 +11,7 @@ namespace DigitalPrice_Json
     using R = Newtonsoft.Json.Required;
     using N = Newtonsoft.Json.NullValueHandling;
 
-    public partial class DallarSerialization
+    public partial class DigitalPriceDallarInfo
     {
         [J("url")] public string Url { get; set; }
         [J("mini_currency")] public string MiniCurrency { get; set; }
@@ -31,14 +26,14 @@ namespace DigitalPrice_Json
         [J("high")] public decimal? High { get; set; }
     }
 
-    public partial class DallarSerialization
+    public partial class DigitalPriceDallarInfo
     {
-        public static DallarSerialization[] FromJson(string json) => JsonConvert.DeserializeObject<DallarSerialization[]>(json, DigitalPrice_Json.Converter.Settings);
+        public static DigitalPriceDallarInfo[] FromJson(string json) => JsonConvert.DeserializeObject<DigitalPriceDallarInfo[]>(json, DallarBot.Exchanges.Converter.Settings);
     }
 
     public static class Serialize
     {
-        public static string ToJson(this DallarSerialization[] self) => JsonConvert.SerializeObject(self, DigitalPrice_Json.Converter.Settings);
+        public static string ToJson(this DigitalPriceDallarInfo[] self) => JsonConvert.SerializeObject(self, DallarBot.Exchanges.Converter.Settings);
     }
 
     internal static class Converter

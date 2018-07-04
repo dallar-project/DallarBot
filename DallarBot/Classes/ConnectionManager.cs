@@ -17,7 +17,8 @@ namespace DallarBot.Classes
 
         public ConnectionManager(string _uri)
         {
-            uri = new Uri(_uri);
+            var uriBuilder = new UriBuilder(_uri);
+            uri = uriBuilder.Uri;
         }
 
         public JObject InvokeMethod(string _method, params object[] _params)
