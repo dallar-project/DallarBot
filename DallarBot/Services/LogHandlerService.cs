@@ -32,7 +32,7 @@ namespace DallarBot.Services
 
         private async Task Log(LogMessage arg)
         {
-            await System.IO.File.AppendAllTextAsync(Environment.CurrentDirectory + "/log.txt", arg.Message);
+            await System.IO.File.AppendAllTextAsync(Environment.CurrentDirectory + "/log.txt", arg.Message + Environment.NewLine);
         }
 
         private Task Disconnected(Exception ex)
