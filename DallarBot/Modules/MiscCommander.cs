@@ -15,6 +15,9 @@ using System.Net;
 using DallarBot.Classes;
 using DallarBot.Services;
 using DallarBot.Exchanges;
+using System.Net.Http;
+using SimpleJson;
+using Newtonsoft.Json;
 
 namespace DallarBot.Modules
 {
@@ -148,6 +151,26 @@ namespace DallarBot.Modules
             var dadJoke = await client.DownloadStringTaskAsync("https://icanhazdadjoke.com/");
 
             await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + dadJoke);
+        }
+
+        /** Allar (Chuck Norris) API Puller */
+
+        [Command("allar")]
+        public async Task FetchAllarJoke()
+        {
+            var httpClient = new HttpClient();
+            var content = await httpClient.GetStringAsync("http://api.icndb.com/jokes/random?firstName=Michael&lastName=Allar");
+
+            try
+            {
+                dynamic jokeResult = JsonConvert.DeserializeObject(content);
+                string joke = jokeResult.value.joke;
+                await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + joke);
+            }
+            catch
+            {
+                await Context.Channel.SendMessageAsync(Context.User.Mention + ": Failed to fetch joke.");
+            }            
         }
     }
 }
