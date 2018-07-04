@@ -97,7 +97,17 @@ namespace DallarBot.Modules
                 changeEmoji + " " + global.DallarInfo.PriceChange + " Change in 24 Hours" + Environment.NewLine;
 
             await Context.Channel.SendMessageAsync(Info);
+        }
 
+        [Command("dad")]
+        public async Task FetchDadJoke()
+        {
+            var client = new WebClient();
+            client.Headers.Add("Accept", "text/plain");
+
+            var dadJoke = await client.DownloadStringTaskAsync("https://icanhazdadjoke.com/");
+
+            await Context.Channel.SendMessageAsync(Context.User.Mention + ": " + dadJoke);
         }
     }
 }
