@@ -73,11 +73,9 @@ namespace DallarBot.Modules
                         "Your DallarBot wallet should not be used to permanently store your funds!" + Environment.NewLine +
                         Environment.NewLine + "Another important notice is that all Dallar transactions, whether it be through the DallarBot or through your personal wallet, incurs a flat combined fee of 0.0002 DAL(transaction fee + DallarBot fund fee.) The transaction fee is charged by the mining pool itself to validate your transactions, much akin to the default behavior of your Dallar wallet. The DallarBot fund fee is sampled from the leftover difference, to host the necessary external server to run DallarBot itself." + Environment.NewLine +
                         Environment.NewLine + "Every transaction needs to be verified by the blockchain for 6 blocks(5 - 10 minute period approximate.) If you check your balances right after a transaction, it will notify your transaction as " + '\u0022' + "pending" + '\u0022' + " Any pending funds will not be available until that period has been completed." + Environment.NewLine +
-                        Environment.NewLine + "To deposit Dallar into your DallarBot account, please send funds from your wallet to the following address: " + Environment.NewLine);
+                        Environment.NewLine + "To deposit Dallar into your DallarBot account, please send funds from your wallet to the following address: " +
+                        Environment.NewLine + "`" + wallet + "`");
                     await Context.User.SendFileAsync(global.qr.GenerateQRBitmap("dallar:" + wallet), "Wallet.png");
-                    await Context.User.SendMessageAsync(Environment.NewLine + "`" + wallet + "`" + Environment.NewLine +
-                        Environment.NewLine + "```!balance\n!give\n!withdraw```" + Environment.NewLine +
-                        Environment.NewLine + "PS: On our current roadmap, we are investigating being able to send dallars directly as message reactions, so that we can tip people a small fixed amount for a specific highly appreciated post.");
                 }
                 else
                 {
