@@ -6,6 +6,7 @@ using System.IO;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using DallarBot.Classes;
 
 namespace DallarBot.Services
 {
@@ -138,16 +139,16 @@ namespace DallarBot.Services
             return (TransactionID != null && TransactionID != "");
         }
 
-        public bool SendMinusFees(string fromAccount, string toWallet, string feeAccount, decimal txfee, decimal amount)
+        public bool SendMinusFees(string fromAccount, string toWallet, decimal amount)
         {
+            DallarHelpers.GetTXFeeAndAccount(out decimal TxFee, out string FeeAccount);
+
             string txid = SendToAddress(fromAccount, toWallet, amount);
-            bool success = (txid != null || txid != "");
-            if (success)
+            if (txid != null || txid != "")
             {
                 decimal transactionFee = GetTransactionFee(txid);
-                decimal remainder = transactionFee + txfee;
-                success = MoveToAddress(fromAccount, feeAccount, remainder);
-                return success;
+                decimal remainder = transactionFee + TxFee;
+                return MoveToAddress(fromAccount, FeeAccount, remainder);
             }
             return false;
         }

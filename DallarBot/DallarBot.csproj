@@ -20,22 +20,4 @@
     <PackageReference Include="System.Interactive.Async" Version="3.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Discord.Net.Commands">
-      <HintPath>..\Dependencies\Discord.Net.Commands.dll</HintPath>
-    </Reference>
-    <Reference Include="Discord.Net.Core">
-      <HintPath>..\Dependencies\Discord.Net.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Discord.Net.Rest">
-      <HintPath>..\Dependencies\Discord.Net.Rest.dll</HintPath>
-    </Reference>
-    <Reference Include="Discord.Net.Webhook">
-      <HintPath>..\Dependencies\Discord.Net.Webhook.dll</HintPath>
-    </Reference>
-    <Reference Include="Discord.Net.WebSocket">
-      <HintPath>..\Dependencies\Discord.Net.WebSocket.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
