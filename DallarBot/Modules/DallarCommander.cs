@@ -92,211 +92,93 @@ namespace DallarBot.Modules
         }
 
         [Command("withdraw")]
-        public async Task WithdrawFromWallet(decimal amount)
+        public async Task WithdrawFromWalletInstant(string AmountStr, string PublicAddress)
         {
-            if (!Context.IsPrivate)
+            if (!global.client.IsAddressValid(PublicAddress))
             {
-                string wallet = "";
-                bool success = true;
+                // handle invalid public address
+                await Logger.LogUserAction(Context, "Tried to withdraw but PublicAddress (" + PublicAddress + ") is invalid.");
+                await Context.User.SendMessageAsync(Context.User.Mention + ", seems like you tried withdrawing Dallar to an invalid Dallar address. You supplied: " + PublicAddress);
+                await MessageHelper.DeleteNonPrivateMessage(Context);
+                return;
+            }
 
-                success = global.client.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out wallet);
-                if (success)
+            global.GetTXFeeAndAccount(Context, out decimal txfee, out string feeAccount);
+            decimal balance = global.client.GetRawAccountBalance(Context.User.Id.ToString());
+
+            decimal Amount = 0M;
+            if (AmountStr == "all")
+            {   // Simply fetch amount as user's balance minus transaction fees
+                Amount = balance - txfee;
+            }
+            else
+            {
+                // Make sure user passed in a valid number
+                if (!decimal.TryParse(AmountStr, out Amount))
                 {
-                    if (amount > 0)
+                    // handle amount parse fail
+                    await Logger.LogUserAction(Context, "Tried to withdraw " + Amount + " but value could not be parsed.");
+                    await Context.User.SendMessageAsync(Context.User.Mention + ", the amount you tried to withdraw can not be parsed as a number. You tried withdrawing " + Amount + " DAL.");
+                    await MessageHelper.DeleteNonPrivateMessage(Context);
+                    return;
+                }
+
+                // Make sure Amount is greater than zero.
+                if (Amount <= 0)
+                {
+                    await Logger.LogUserAction(Context, "Tried to withdraw " + Amount + " but value is invalid.");
+                    await Context.User.SendMessageAsync(Context.User.Mention + ", you can not withdraw 0 or less Dallar. You tried withdrawing " + Amount + " DAL.");
+                    await MessageHelper.DeleteNonPrivateMessage(Context);
+                    return;
+                }
+
+                // Verify user has requested balance to withdraw
+                
+                if (Amount + txfee > balance)
+                {
+                    // user can not afford requested withdraw amount
+                    await Logger.LogUserAction(Context, "Tried to withdraw " + Amount + " but has insufficient funds. (" + balance + ")");
+                    await Context.User.SendMessageAsync(Context.User.Mention + ", looks like you don't have enough funds withdraw " + Amount + "DAL! Remember, there is a " + txfee + " DAL fee for performing bot transactions.");
+                    await MessageHelper.DeleteNonPrivateMessage(Context);
+                    return;
+                }
+            }
+
+            // Amount should be guaranteed a good value to withdraw
+            // Fetch user's wallet
+            if (global.client.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string Wallet))
+            {
+                if (global.client.SendMinusFees(Context.User.Id.ToString(), PublicAddress, feeAccount, txfee, Amount))
+                {
+                    // Successfully withdrew
+                    await Logger.LogUserAction(Context, "Successfully withdrew " + Amount + " from wallet (" + Wallet + ").");
+                    if (Context.IsPrivate)
                     {
-                        decimal balance = global.client.GetRawAccountBalance(Context.User.Id.ToString());
-
-                        decimal txfee;
-                        string feeAccount;
-                        global.GetTXFeeAndAccount(Context, out txfee, out feeAccount);
-
-                        if (balance >= amount + txfee)
-                        {
-                            if (global.WithdrawlObjects.Any(x => x.guildUser.Id == Context.User.Id))
-                            {
-                                WithdrawManager withdrawlObject = global.WithdrawlObjects.First(x => x.guildUser.Id == Context.User.Id);
-                                withdrawlObject.amount = amount;
-                                await Context.User.SendMessageAsync("Please respond with your wallet addresss to withdraw " + amount + "DAL or `cancel` to cancel the withdraw.");
-                            }
-                            else
-                            {
-                                WithdrawManager withdrawlObject = new WithdrawManager(Context.User as SocketGuildUser, amount);
-                                global.WithdrawlObjects.Add(withdrawlObject);
-                                await Context.User.SendMessageAsync("Please respond with your wallet addresss to withdraw " + amount + "DAL or `cancel` to cancel the withdraw.");
-                            }
-                        }
-                        else
-                        {
-                            await Context.User.SendMessageAsync(Context.User.Mention + ", looks like you don't have the funds to do this!");
-                        }
+                        await Context.User.SendMessageAsync("You have successfully withdrawn " + Amount + " DAL to address " + PublicAddress + ".");
                     }
                     else
                     {
-                        await Context.User.SendMessageAsync(Context.User.Mention + ", please enter a value above 0!");
+                        await Context.Channel.SendMessageAsync("You have successfully withdrawn " + Amount + " DAL.");
                     }
                 }
                 else
-                {
-                    await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
+                {   // unable to send dallar
+                    await Logger.LogUserAction(Context, "Tried to withdraw " + Amount + " from wallet (" + Wallet + ") but daemon failed to send transaction.");
+                    await Context.User.SendMessageAsync("Something went wrong trying to send your Dallar through the Dallar daemon. (Please contact the Administrators!)");
+                    await MessageHelper.DeleteNonPrivateMessage(Context);
+                    return;
                 }
-                await Context.Message.DeleteAsync();
             }
             else
-            {
-                await Context.User.SendMessageAsync("Sorry, for now you have to use withdraw commands in a server. We're working on this.");
+            {   // unable to fetch user's wallet
+                await Logger.LogUserAction(Context, "Tried to withdraw " + Amount + " but bot could not determine user's wallet.");
+                await Context.User.SendMessageAsync("Something went wrong trying to get your DallarBot Dallar Address. (Please contact the Administrators!)");
+                await MessageHelper.DeleteNonPrivateMessage(Context);
+                return;
             }
-        }
 
-        [Command("withdraw")]
-        public async Task WithdrawFromWalletInstant(decimal amount, string publicAddress)
-        {
-            if (!Context.IsPrivate)
-            {
-                string wallet = "";
-                bool success = true;
-
-                success = global.client.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out wallet);
-                if (success)
-                {
-                    if (amount > 0)
-                    {
-                        decimal balance = global.client.GetRawAccountBalance(Context.User.Id.ToString());
-
-                        decimal txfee;
-                        string feeAccount;
-                        global.GetTXFeeAndAccount(Context, out txfee, out feeAccount);
-
-                        if (balance >= amount + txfee)
-                        {
-                            if (global.client.IsAddressValid(publicAddress))
-                            {
-                                success = global.client.SendMinusFees(Context.User.Id.ToString(), publicAddress, feeAccount, txfee, amount);
-                                if (success)
-                                {
-                                    await Context.User.SendMessageAsync("You have successfully withdrawn " + amount + "DAL!");
-                                }
-                                else
-                                {
-                                    await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
-                                }
-                            }
-                            else
-                            {
-                                await Context.User.SendMessageAsync(Context.User.Mention + ", seems that address isn't quite right.");
-                            }
-                        }
-                        else
-                        {
-                            await Context.User.SendMessageAsync(Context.User.Mention + ", looks like you don't have enough funds withdraw " + amount + "DAL!");
-                        }
-                    }
-                    else
-                    {
-                        await Context.User.SendMessageAsync(Context.User.Mention + ", please enter a value above 0!");
-                    }
-                }
-                else
-                {
-                    await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
-                }
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, for now you have to use withdraw commands in a server. We're working on this.");
-            }
-        }
-
-        [Command("withdraw")]
-        public async Task WithdrawAllFromWallet(string amountString)
-        {
-            if (!Context.IsPrivate)
-            {
-                if (amountString == "all")
-                {
-                    string wallet = "";
-                    bool success = true;
-
-                    success = global.client.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out wallet);
-                    if (success)
-                    {
-                        decimal txfee;
-                        string feeAccount;
-                        global.GetTXFeeAndAccount(Context, out txfee, out feeAccount);
-
-                        decimal amount = global.client.GetRawAccountBalance(Context.User.Id.ToString()) - txfee;
-                        await WithdrawFromWallet(amount);
-                    }
-                }
-                else
-                {
-                    await Context.User.SendMessageAsync(Context.User.Mention + ", you forgot to specify the amount." + Environment.NewLine + "!withdraw <amount> <address>");
-                }
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, for now you have to use withdraw commands in a server. We're working on this.");
-            }
-        }
-
-        [Command("withdraw")]
-        public async Task WithdrawAllFromWalletInstant(string amountString, string publicAddress)
-        {
-            if (!Context.IsPrivate)
-            {
-                if (amountString == "all")
-                {
-                    string wallet = "";
-                    bool success = true;
-
-                    success = global.client.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out wallet);
-                    if (success)
-                    {
-                        decimal txfee;
-                        string feeAccount;
-                        global.GetTXFeeAndAccount(Context, out txfee, out feeAccount);
-
-                        decimal amount = global.client.GetRawAccountBalance(Context.User.Id.ToString()) - txfee;
-                        if (amount > 0)
-                        {
-                            if (global.client.IsAddressValid(publicAddress))
-                            {
-                                success = global.client.SendMinusFees(Context.User.Id.ToString(), publicAddress, feeAccount, txfee, amount);
-                                if (success)
-                                {
-                                    await Context.User.SendMessageAsync("You have successfully withdrawn " + amount + "DAL!");
-                                }
-                                else
-                                {
-                                    await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
-                                }
-                            }
-                            else
-                            {
-                                await Context.User.SendMessageAsync(Context.User.Mention + ", seems that address isn't quite right.");
-                            }
-                        }
-                        else
-                        {
-                            await Context.User.SendMessageAsync(Context.User.Mention + ", looks like you don't have enough funds withdraw " + amount + "DAL!");
-                        }
-                    }
-                    else
-                    {
-                        await Context.User.SendMessageAsync("Something went wrong! (Please contact an Administrator)");
-                    }
-                }
-                else
-                {
-                    await Context.User.SendMessageAsync(Context.User.Mention + ", please use the correct syntax." + Environment.NewLine + "!withdraw <amount> <address>");
-                }
-                await Context.Message.DeleteAsync();
-            }
-            else
-            {
-                await Context.User.SendMessageAsync("Sorry, for now you have to use withdraw commands in a server. We're working on this.");
-            }
+            // After withdraw success
+            await MessageHelper.DeleteNonPrivateMessage(Context);
         }
 
         [Command("send")]

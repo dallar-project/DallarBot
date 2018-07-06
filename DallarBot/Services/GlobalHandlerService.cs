@@ -25,8 +25,6 @@ namespace DallarBot.Services
         public DigitalPriceDallarInfo DallarInfo;
         protected DateTime lastFetchTime;
 
-        public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
-
         public RandomManager RandomManager = new RandomManager();
         
 
@@ -49,6 +47,7 @@ namespace DallarBot.Services
         {
             var message = socketMessage as SocketUserMessage;
             var Context = new SocketCommandContext(discord, message);
+            /*
             if (Context.IsPrivate)
             {
                 var withdrawl = WithdrawlObjects.First(x => x.guildUser.Id == socketMessage.Author.Id);
@@ -105,6 +104,7 @@ namespace DallarBot.Services
                     await socketMessage.Author.SendMessageAsync("I don't understand that command.");
                 }
             }
+            */
         }
 
         public bool IsUserAdmin(SocketGuildUser user)
