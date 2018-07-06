@@ -20,41 +20,6 @@ namespace DallarBot.Services
             System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", output + Environment.NewLine);
         }
 
-        private Task Disconnected(Exception ex)
-        {
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("Disconnected."));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("Something went wrong..."));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString(ex.Message));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-            return Task.Delay(0);
-        }
-
-        private Task Connected()
-        {
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("Connected."));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("----------------------------"));
-            return Task.Delay(0);
-        }
-
-        private Task Ready()
-        {
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("Bot is readied."));
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("----------------------------"));
-            return Task.Delay(0);
-        }
-
         public static string CenterString(string value)
         {
             return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
@@ -62,11 +27,13 @@ namespace DallarBot.Services
 
         public static async Task LogAsync(string log)
         {
+            Debug.WriteLine(log);
             await System.IO.File.AppendAllTextAsync(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
         }
 
         public static void Log(string log)
         {
+            Debug.WriteLine(log);
             System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
         }
 

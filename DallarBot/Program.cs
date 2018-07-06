@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Threading.Tasks;
 using DallarBot.Classes;
+using DallarBot.Commands;
 using DallarBot.Services;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -13,23 +15,27 @@ namespace DallarBot
     public class Program
     {
         static DiscordShardedClient DiscordClient;
-        static Dictionary<int, CommandsNextModule> DiscordCommands;
+        static ReadOnlyDictionary<int, CommandsNextModule> DiscordCommands;
         public static SettingsHandlerService SettingsHandler;
         public static DaemonService Daemon;
         public static DigitalPriceExchangeService DigitalPriceExchange;
+        public static RandomManagerService RandomManager;
+        public static YoMommaJokeService YoMommaJokes;
 
         static void Main(string[] args)
         {
-            SettingsHandler = new SettingsHandlerService();
+            SettingsHandler = SettingsHandlerService.FromConfig();
             DigitalPriceExchange = new DigitalPriceExchangeService();
+            RandomManager = new RandomManagerService();
+            YoMommaJokes = new YoMommaJokeService();
 
-            Daemon = new DaemonService(Program.SettingsHandler.Daemon.IpAddress + ":" + Program.SettingsHandler.Daemon.Port)
+            Daemon = new DaemonService(SettingsHandler.Daemon.IpAddress + ":" + SettingsHandler.Daemon.Port)
             {
-                credentials = new NetworkCredential(Program.SettingsHandler.Daemon.Username, Program.SettingsHandler.Daemon.Password)
+                credentials = new NetworkCredential(SettingsHandler.Daemon.Username, SettingsHandler.Daemon.Password)
             };
 
             // Ensure fee account is already created
-            Daemon.GetWalletAddressFromUser(Program.SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
+            Daemon.GetWalletAddressFromUser(SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
 
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
         }
@@ -61,12 +67,20 @@ namespace DallarBot
                     await e.Message.RespondAsync("pong!");
             };
 
-            DiscordCommands = (Dictionary<int, CommandsNextModule>)DiscordClient.UseCommandsNext(new CommandsNextConfiguration
+            DiscordCommands = (ReadOnlyDictionary<int, CommandsNextModule>)DiscordClient.UseCommandsNext(new CommandsNextConfiguration
             {
                 StringPrefix = "d!",
                 EnableDms = true,
                 EnableMentionPrefix = true
             });
+
+            foreach (CommandsNextModule CommandsModule in DiscordCommands.Values)
+            {
+                CommandsModule.RegisterCommands<TipCommands>();
+                CommandsModule.RegisterCommands<MiscCommands>();
+                CommandsModule.RegisterCommands<ExchangeCommands>();
+                CommandsModule.RegisterCommands<DallarCommands>();
+            }
 
             await DiscordClient.StartAsync();
             await Task.Delay(-1);

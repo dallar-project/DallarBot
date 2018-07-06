@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace DallarBot.Classes
 {
     class DiscordHelpers
     {
-        static bool IsUserAdmin(CommandContext Context)
+        public static bool IsUserAdmin(CommandContext Context)
         {
             if (Context.Member == null)
             {
@@ -39,7 +40,7 @@ namespace DallarBot.Classes
             return false;
         }
 
-        static bool IsUserModerator(CommandContext Context)
+        public static bool IsUserModerator(CommandContext Context)
         {
             if (Context.Member == null)
             {
@@ -57,7 +58,7 @@ namespace DallarBot.Classes
             return false;
         }
 
-        static bool IsUserDallarDevTeam(CommandContext Context)
+        public static bool IsUserDallarDevTeam(CommandContext Context)
         {
             if (Context.Member == null)
             {
@@ -93,6 +94,54 @@ namespace DallarBot.Classes
             {
                 await Context.RespondAsync(Response);
             }
+        }
+
+        public static bool HasMinimumStatus(DiscordPresence MemberPrescence, UserStatus MinimumStatus)
+        {
+            UserStatus MemberStatus = UserStatus.Offline;
+
+            if (MemberPrescence != null) // Apparently offline means null prescence instead of offline prescence
+            {
+                MemberStatus = MemberPrescence.Status;
+            }
+
+            switch (MinimumStatus)
+            {
+                case UserStatus.Offline:
+                    return true;
+                case UserStatus.Online:
+                    return MemberStatus == UserStatus.Online;
+                case UserStatus.Idle:
+                case UserStatus.DoNotDisturb:
+                    return MemberStatus == UserStatus.Idle || MemberStatus == UserStatus.Online || MemberStatus == UserStatus.DoNotDisturb;
+                case UserStatus.Invisible:
+                    return MemberStatus != UserStatus.Offline;
+                default:
+                    return false;
+            }
+        }
+
+        public static IEnumerable<DiscordMember> GetHumansInContextGuild(CommandContext Context, bool IgnoreContextUser = false, UserStatus MinimumStatus = UserStatus.Offline)
+        {
+            return Context.Guild.Members.Where(x =>
+            {
+                if (x.IsBot)
+                {
+                    return false;
+                }
+
+                if (IgnoreContextUser && Context.User.Id == x.Id)
+                {
+                    return false;
+                }
+
+                if (MinimumStatus != UserStatus.Offline && !HasMinimumStatus(x.Presence, MinimumStatus))
+                {
+                    return false;
+                }
+
+                return true;            
+            }); 
         }
     }
 }
