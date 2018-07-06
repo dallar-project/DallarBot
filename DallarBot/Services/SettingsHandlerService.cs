@@ -8,8 +8,8 @@ namespace DallarBot.Services
     {
         public SettingsToken Startup { get; set; }
         public SettingsRPC Rpc { get; set; }
-        public List<SettingsGuild> Guilds { get; set; }
-        public List<SettingsHelp> HelpCommands { get; set; }
+        public SettingsTX TX { get; set; }
+        public List<SettingsHelp> HelpCommands { get; set; }    
     }
 
     public class SettingsToken
@@ -24,13 +24,6 @@ namespace DallarBot.Services
         public string Port { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-    }
-
-    public class SettingsGuild
-    {
-        public string DisplayName { get; set; }
-        public ulong GuildID { get; set; }
-        public SettingsTX Tx { get; set; }
     }
 
     public class SettingsTX
