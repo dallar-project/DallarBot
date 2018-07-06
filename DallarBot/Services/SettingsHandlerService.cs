@@ -34,7 +34,7 @@ namespace DallarBot.Services
         {
         }
 
-        static SettingsHandlerService FromConfig()
+        public static SettingsHandlerService FromConfig()
         {
             if (System.IO.File.Exists(Environment.CurrentDirectory + "/settings.json"))
             {
