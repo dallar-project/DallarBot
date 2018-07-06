@@ -168,7 +168,7 @@ namespace DallarBot.Modules
 
                         if (balance >= amount + txfee)
                         {
-                            if (global.client.isAddressValid(publicAddress))
+                            if (global.client.IsAddressValid(publicAddress))
                             {
                                 success = global.client.SendMinusFees(Context.User.Id.ToString(), publicAddress, feeAccount, txfee, amount);
                                 if (success)
@@ -260,7 +260,7 @@ namespace DallarBot.Modules
                         decimal amount = global.client.GetRawAccountBalance(Context.User.Id.ToString()) - txfee;
                         if (amount > 0)
                         {
-                            if (global.client.isAddressValid(publicAddress))
+                            if (global.client.IsAddressValid(publicAddress))
                             {
                                 success = global.client.SendMinusFees(Context.User.Id.ToString(), publicAddress, feeAccount, txfee, amount);
                                 if (success)
@@ -460,7 +460,7 @@ namespace DallarBot.Modules
         {
             if (amount > 0)
             {
-                int randomIndex = new RandomManager(0, Context.Guild.Users.Count - 1).result;
+                int randomIndex = global.RandomManager.GetRandomInteger(0, Context.Guild.Users.Count - 1);
                 var user = Context.Guild.Users.Where(x => x.IsBot == false).ToList()[randomIndex];
                 if (user != null)
                 {

@@ -44,7 +44,7 @@ namespace DallarBot
             services.GetRequiredService<LogHandlerService>();
             services.GetRequiredService<GlobalHandlerService>();
 
-            await client.LoginAsync(TokenType.Bot, services.GetService<SettingsHandlerService>().dallarSettings.startup.token);
+            await client.LoginAsync(TokenType.Bot, services.GetService<SettingsHandlerService>().dallarSettings.Startup.Token);
             await client.StartAsync();
 
             await Task.Delay(-1);
@@ -69,4 +69,23 @@ namespace DallarBot
             return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
         }
     }
+
+    public class Logger
+    {
+        protected Logger()
+        {
+        }
+
+        public static async Task Log(string log)
+        {
+            await System.IO.File.AppendAllTextAsync(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
+        }
+
+        public static async Task LogUserAction(SocketCommandContext Context, string log)
+        {
+            await (Log("[" + DateTime.Now.ToString() + "] Log: [G: " + Context.Guild.Name + "][U: " + Context.User.Id + " (" + Context.User.ToString() + ")]: " + log));
+        }
+    }
+    
+    
 }

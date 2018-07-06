@@ -29,6 +29,8 @@ namespace DallarBot.Services
         protected DateTime lastFetchTime;
 
         public List<WithdrawManager> WithdrawlObjects = new List<WithdrawManager>();
+
+        public RandomManager RandomManager = new RandomManager();
         
 
         public GlobalHandlerService(DiscordSocketClient _discord, SettingsHandlerService _settings)
@@ -36,13 +38,13 @@ namespace DallarBot.Services
             discord = _discord;
             settings = _settings;
 
-            client = new ConnectionManager(settings.dallarSettings.rpc.ipaddress + ":" + settings.dallarSettings.rpc.port);
-            client.credentials = new NetworkCredential(settings.dallarSettings.rpc.username, settings.dallarSettings.rpc.password);
+            client = new ConnectionManager(settings.dallarSettings.Rpc.Ipaddress + ":" + settings.dallarSettings.Rpc.Port);
+            client.credentials = new NetworkCredential(settings.dallarSettings.Rpc.Username, settings.dallarSettings.Rpc.Password);
 
-            foreach(var guild in settings.dallarSettings.guilds)
+            foreach(var guild in settings.dallarSettings.Guilds)
             {
                 string toWallet;
-                client.GetWalletAddressFromUser(guild.tx.feeAccount, true, out toWallet);
+                client.GetWalletAddressFromUser(guild.Tx.FeeAccount, true, out toWallet);
             }
 
             discord.MessageReceived += MessageReceived;
@@ -77,7 +79,7 @@ namespace DallarBot.Services
                             decimal balance = client.GetRawAccountBalance(Context.User.Id.ToString());
                             if (balance >= withdrawl.amount + txfee)
                             {
-                                if (client.isAddressValid(message.Content))
+                                if (client.IsAddressValid(message.Content))
                                 {
                                     success = client.SendMinusFees(Context.User.Id.ToString(), message.Content, feeAccount, txfee, withdrawl.amount);
                                     if (success)
@@ -135,11 +137,11 @@ namespace DallarBot.Services
         {
             if (context.Guild != null)
             {
-                var guild = settings.dallarSettings.guilds.First(x => x.guildID == context.Guild.Id);
+                var guild = settings.dallarSettings.Guilds.First(x => x.GuildID == context.Guild.Id);
                 if (guild != null)
                 {
-                    txfee = guild.tx.txfee;
-                    feeAccount = guild.tx.feeAccount;
+                    txfee = guild.Tx.Txfee;
+                    feeAccount = guild.Tx.FeeAccount;
                     return;
                 }
             }
@@ -158,7 +160,7 @@ namespace DallarBot.Services
                 var jsonString = await client.DownloadStringTaskAsync("https://digitalprice.io/markets/get-currency-summary?currency=BALANCE_COIN_BITCOIN");
                 var btcPrice = await client.DownloadStringTaskAsync("https://blockchain.info/tobtc?currency=USD&value=1");
 
-                var DigitalPriceInfo = DigitalPriceDallarInfo.FromJson(jsonString);
+                var DigitalPriceInfo = JsonConvert.DeserializeObject<DigitalPriceDallarInfo[]>(jsonString);
 
                 for (int i = 0; i < DigitalPriceInfo.Length; i++)
                 {

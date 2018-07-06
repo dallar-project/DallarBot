@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Drawing;
-using System.IO;
-using System.DrawingCore;
+﻿using System.IO;
 using QRCoder;
 
 namespace DallarBot.Classes
