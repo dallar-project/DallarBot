@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Net;
@@ -12,7 +10,6 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 
 using DallarBot.Classes;
-using DallarBot.Services;
 using DallarBot.Exchanges;
 
 namespace DallarBot.Services
@@ -38,14 +35,12 @@ namespace DallarBot.Services
             discord = _discord;
             settings = _settings;
 
-            client = new ConnectionManager(settings.dallarSettings.Rpc.Ipaddress + ":" + settings.dallarSettings.Rpc.Port);
-            client.credentials = new NetworkCredential(settings.dallarSettings.Rpc.Username, settings.dallarSettings.Rpc.Password);
-
-            foreach(var guild in settings.dallarSettings.Guilds)
+            client = new ConnectionManager(settings.dallarSettings.Rpc.Ipaddress + ":" + settings.dallarSettings.Rpc.Port)
             {
-                string toWallet;
-                client.GetWalletAddressFromUser(guild.Tx.FeeAccount, true, out toWallet);
-            }
+                credentials = new NetworkCredential(settings.dallarSettings.Rpc.Username, settings.dallarSettings.Rpc.Password)
+            };
+
+            client.GetWalletAddressFromUser(settings.dallarSettings.TX.FeeAccount, true, out string toWallet);
 
             discord.MessageReceived += MessageReceived;
         }
@@ -112,21 +107,21 @@ namespace DallarBot.Services
             }
         }
 
-        public bool isUserAdmin(SocketGuildUser user)
+        public bool IsUserAdmin(SocketGuildUser user)
         {
             var guild = discord.GetGuild(user.Guild.Id);
             var adminRole = guild.Roles.FirstOrDefault(x => x.Name == "Admin");
             return user.Roles.Contains(adminRole);
         }
 
-        public bool isUserModerator(SocketGuildUser user)
+        public bool IsUserModerator(SocketGuildUser user)
         {
             var guild = discord.GetGuild(user.Guild.Id);
             var moderatorRole = guild.Roles.FirstOrDefault(x => x.Name == "Moderator");
             return user.Roles.Contains(moderatorRole);
         }
 
-        public bool isUserDevTeam(SocketGuildUser user)
+        public bool IsUserDevTeam(SocketGuildUser user)
         {
             var guild = discord.GetGuild(user.Guild.Id);
             var devRole = guild.Roles.FirstOrDefault(x => x.Name == "Dallar Dev Team");
@@ -135,19 +130,8 @@ namespace DallarBot.Services
 
         public void GetTXFeeAndAccount(SocketCommandContext context, out decimal txfee, out string feeAccount)
         {
-            if (context.Guild != null)
-            {
-                var guild = settings.dallarSettings.Guilds.First(x => x.GuildID == context.Guild.Id);
-                if (guild != null)
-                {
-                    txfee = guild.Tx.Txfee;
-                    feeAccount = guild.Tx.FeeAccount;
-                    return;
-                }
-            }
-
-            txfee = 0.0002M;
-            feeAccount = "txaccount";
+            txfee = settings.dallarSettings.TX.Txfee;
+            feeAccount = settings.dallarSettings.TX.FeeAccount;
         }
 
         public async Task FetchValueInfo()

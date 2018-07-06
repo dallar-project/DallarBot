@@ -1,28 +1,21 @@
 {
 	"startup":
 	{
-		"token": "REPLACE ME",
-		"taskName": "REPLACE ME",
+		"Token": "REPLACE ME",
+		"TaskName": "REPLACE ME",
 	},
 	"RPC":
 	{
-		"ipaddress": "REPLACE ME",
-		"port": "REPLACE ME",
-		"username": "REPLACE ME",
-		"password": "REPLACE ME",
+		"Ipaddress": "REPLACE ME",
+		"Port": "REPLACE ME",
+		"Username": "REPLACE ME",
+		"Password": "REPLACE ME",
 	},
-	"guilds":
-	[
-		{
-			"displayName": "REPLACE ME",
-			"guildID": "REPLACE ME",
-			"tx":
-			{
-				"txfee": 0.0002,
-				"feeAccount": "REPLACE ME"
-			}
-		}
-	],
+	"TX":
+	{
+		"Txfee": 0.0002,
+		"FeeAccount": "REPLACE ME"
+	},
 	"helpCommands":
 	[
 		{

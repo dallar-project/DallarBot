@@ -10,7 +10,6 @@ using Newtonsoft.Json.Linq;
 
 namespace DallarBot.Classes
 {
-
     public class RandomManager
     {
         public int result = -1;
@@ -31,7 +30,7 @@ namespace DallarBot.Classes
 
             JObject param = new JObject();
             param["apiKey"] = "fbef3728-6fa6-41d3-bd3e-0df830160a2e";
-            param["n"] = 1000;
+            param["n"] = 10;
             param["decimalPlaces"] = 7;
 
             JObject sendObject = new JObject();
