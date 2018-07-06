@@ -83,9 +83,29 @@ namespace DallarBot
 
         public static async Task LogUserAction(SocketCommandContext Context, string log)
         {
-            await (Log("[" + DateTime.Now.ToString() + "] Log: [G: " + Context.Guild.Name + "][U: " + Context.User.Id + " (" + Context.User.ToString() + ")]: " + log));
+            if (Context.IsPrivate)
+            {
+                await (Log("[" + DateTime.Now.ToString() + "] Log: [DIRECT][U: " + Context.User.Id + " (" + Context.User.ToString() + ")]: " + log));
+            }
+            else
+            {
+                await (Log("[" + DateTime.Now.ToString() + "] Log: [G: " + Context.Guild.Name + "][U: " + Context.User.Id + " (" + Context.User.ToString() + ")]: " + log));
+            }
         }
     }
-    
-    
+
+    public class MessageHelper
+    {
+        protected MessageHelper()
+        {
+        }
+
+        public static async Task DeleteNonPrivateMessage(SocketCommandContext Context)
+        {
+            if (!Context.IsPrivate)
+            {
+                await Context.Message.DeleteAsync();
+            }
+        }
+    }
 }

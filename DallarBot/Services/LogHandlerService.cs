@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
 using System.Threading.Tasks;
-using System.Linq;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
-using Newtonsoft.Json;
-
-using DallarBot.Classes;
 
 namespace DallarBot.Services
 {
@@ -20,13 +12,9 @@ namespace DallarBot.Services
         public LogHandlerService(DiscordSocketClient _discord)
         {
             discord = _discord;
-
             discord.Connected += Connected;
-
             discord.Ready += Ready;
-
             discord.Disconnected += Disconnected;
-
             discord.Log += Log;
         }
 
