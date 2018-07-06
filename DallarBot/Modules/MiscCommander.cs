@@ -21,7 +21,7 @@ using Newtonsoft.Json;
 
 namespace DallarBot.Modules
 {
-    public class MiscCommander : ModuleBase<SocketCommandContext>
+    public class MiscCommander
     {
         private readonly GlobalHandlerService global;
 
@@ -57,7 +57,7 @@ namespace DallarBot.Modules
             var user = Context.User as SocketGuildUser;
             if (global.IsUserAdmin(user) || global.IsUserModerator(user) || global.IsUserDevTeam(user))
             {
-                await Logger.LogUserAction(Context, "Invoked GiveAFuck");
+                await LogHandlerService.LogUserAction(Context, "Invoked GiveAFuck");
                 await Context.Channel.SendMessageAsync(":regional_indicator_g: :regional_indicator_i: :regional_indicator_v: :regional_indicator_e: :a: :regional_indicator_f: :regional_indicator_u: :regional_indicator_c: :regional_indicator_k:");
             }
         }

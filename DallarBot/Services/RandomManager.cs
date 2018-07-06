@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Net;
 using System.IO;
@@ -8,16 +7,16 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace DallarBot.Classes
+namespace DallarBot.Services
 {
-    public class RandomManager
+    public class RandomManagerService
     {
         public int result = -1;
 
         public List<float> RandomFloats;
         public int FloatIndex = 0;
 
-        public RandomManager()
+        public RandomManagerService()
         {
             FetchRandomNumbers();
         }
