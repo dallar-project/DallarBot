@@ -1,111 +1,75 @@
 ﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-
-using DallarBot.Services;
-using System.Text;
 using System.Collections.Generic;
-using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+using DallarBot.Classes;
+using DallarBot.Services;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 
 namespace DallarBot
-{ 
-    class Program : ModuleBase<SocketCommandContext>
+{
+    public class Program
     {
+        static DiscordShardedClient DiscordClient;
+        static Dictionary<int, CommandsNextModule> DiscordCommands;
+        public static SettingsHandlerService SettingsHandler;
+        public static DaemonService Daemon;
+        public static DigitalPriceExchangeService DigitalPriceExchange;
+
         static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
-    
-        private DiscordSocketClient client;
-
-        public async Task MainAsync()
         {
-            Console.WriteLine(CenterString("▒█▀▀▄ █▀▀█ █░░ █░░ █▀▀█ █▀▀█ ▒█▀▀█ █▀▀█ ▀▀█▀▀ "));
-            Console.WriteLine(CenterString("▒█░▒█ █▄▄█ █░░ █░░ █▄▄█ █▄▄▀ ▒█▀▀▄ █░░█ ░░█░░ "));
-            Console.WriteLine(CenterString("▒█▄▄▀ ▀░░▀ ▀▀▀ ▀▀▀ ▀░░▀ ▀░▀▀ ▒█▄▄█ ▀▀▀▀ ░░▀░░ "));
+            SettingsHandler = new SettingsHandlerService();
+            DigitalPriceExchange = new DigitalPriceExchangeService();
 
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-
-            Console.WriteLine(CenterString("Initialising bot..."));
-
-            client = new DiscordSocketClient(new DiscordSocketConfig()
+            Daemon = new DaemonService(Program.SettingsHandler.Daemon.IpAddress + ":" + Program.SettingsHandler.Daemon.Port)
             {
-                LogLevel = LogSeverity.Verbose
+                credentials = new NetworkCredential(Program.SettingsHandler.Daemon.Username, Program.SettingsHandler.Daemon.Password)
+            };
+
+            // Ensure fee account is already created
+            Daemon.GetWalletAddressFromUser(Program.SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
+
+            MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        static async Task MainAsync(string[] args)
+        {
+            Console.WriteLine(LogHandlerService.CenterString("▒█▀▀▄ █▀▀█ █░░ █░░ █▀▀█ █▀▀█ ▒█▀▀█ █▀▀█ ▀▀█▀▀ "));
+            Console.WriteLine(LogHandlerService.CenterString("▒█░▒█ █▄▄█ █░░ █░░ █▄▄█ █▄▄▀ ▒█▀▀▄ █░░█ ░░█░░ "));
+            Console.WriteLine(LogHandlerService.CenterString("▒█▄▄▀ ▀░░▀ ▀▀▀ ▀▀▀ ▀░░▀ ▀░▀▀ ▒█▄▄█ ▀▀▀▀ ░░▀░░ "));
+
+            Console.WriteLine();
+            Console.WriteLine(LogHandlerService.CenterString("----------------------------"));
+            Console.WriteLine();
+
+            Console.WriteLine(LogHandlerService.CenterString("Initialising bot..."));
+
+            DiscordClient = new DiscordShardedClient(new DiscordConfiguration
+            {
+                Token = SettingsHandler.Discord.BotToken,
+                TokenType = TokenType.Bot,
+                LogLevel = LogLevel.Debug
             });
 
-            var services = ConfigureServices();
-            await services.GetRequiredService<CommandHandlerService>().InitializeAsync(services);
-            services.GetRequiredService<SettingsHandlerService>();
-            services.GetRequiredService<LogHandlerService>();
-            services.GetRequiredService<GlobalHandlerService>();
+            DiscordClient.DebugLogger.LogMessageReceived += LogHandlerService.DiscordLogMessageReceived;
 
-            await client.LoginAsync(TokenType.Bot, services.GetService<SettingsHandlerService>().dallarSettings.Startup.Token);
-            await client.StartAsync();
+            DiscordClient.MessageCreated += async e =>
+            {
+                if (e.Message.Content.ToLower().StartsWith("ping"))
+                    await e.Message.RespondAsync("pong!");
+            };
 
+            DiscordCommands = (Dictionary<int, CommandsNextModule>)DiscordClient.UseCommandsNext(new CommandsNextConfiguration
+            {
+                StringPrefix = "d!",
+                EnableDms = true,
+                EnableMentionPrefix = true
+            });
+
+            await DiscordClient.StartAsync();
             await Task.Delay(-1);
-        }
-
-        private IServiceProvider ConfigureServices()
-        {
-            return new ServiceCollection()
-                // Base
-                .AddSingleton(client)
-                .AddSingleton<CommandService>()
-                .AddSingleton<CommandHandlerService>()
-                .AddSingleton<GlobalHandlerService>()
-                .AddSingleton<SettingsHandlerService>()
-                .AddSingleton<LogHandlerService>()
-                // Add additional services here...
-                .BuildServiceProvider();
-        }
-
-        public string CenterString(string value)
-        {
-            return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
-        }
-    }
-
-    public class Logger
-    {
-        protected Logger()
-        {
-        }
-
-        public static async Task Log(string log)
-        {
-            await System.IO.File.AppendAllTextAsync(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
-        }
-
-        public static async Task LogUserAction(SocketCommandContext Context, string log)
-        {
-            if (Context.IsPrivate)
-            {
-                await (Log("[" + DateTime.Now.ToString() + "] Log: [DIRECT][U: " + Context.User.Id + " (" + Context.User.ToString() + ")]: " + log));
-            }
-            else
-            {
-                await (Log("[" + DateTime.Now.ToString() + "] Log: [G: " + Context.Guild.Name + "][U: " + Context.User.Id + " (" + Context.User.ToString() + ")]: " + log));
-            }
-        }
-    }
-
-    public class MessageHelper
-    {
-        protected MessageHelper()
-        {
-        }
-
-        public static async Task DeleteNonPrivateMessage(SocketCommandContext Context)
-        {
-            if (!Context.IsPrivate)
-            {
-                await Context.Message.DeleteAsync();
-            }
         }
     }
 }

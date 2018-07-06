@@ -7,14 +7,14 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace DallarBot.Classes
+namespace DallarBot.Services
 {
-    public class ConnectionManager
+    public class DaemonService
     {
         public Uri uri;
         public ICredentials credentials;
 
-        public ConnectionManager(string _uri)
+        public DaemonService(string _uri)
         {
             var uriBuilder = new UriBuilder(_uri);
             uri = uriBuilder.Uri;
