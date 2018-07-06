@@ -1,59 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Linq;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
 using Newtonsoft.Json;
-using System.Runtime.Serialization;
-
-using DallarBot.Classes;
 
 namespace DallarBot.Services
 {
     public class DiscordSettings
     {
-        public SettingsToken startup { get; set; }
-        public SettingsRPC rpc { get; set; }
-        public List<SettingsGuild> guilds { get; set; }
-        public List<SettingsHelp> helpCommands { get; set; }
+        public SettingsToken Startup { get; set; }
+        public SettingsRPC Rpc { get; set; }
+        public List<SettingsGuild> Guilds { get; set; }
+        public List<SettingsHelp> HelpCommands { get; set; }
     }
 
     public class SettingsToken
     {
-        public string token { get; set; }
-        public string taskName { get; set; }
+        public string Token { get; set; }
+        public string TaskName { get; set; }
     }
 
     public class SettingsRPC
     {
-        public string ipaddress { get; set; }
-        public string port { get; set; }
-        public string username { get; set; }
-        public string password { get; set; }
+        public string Ipaddress { get; set; }
+        public string Port { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 
     public class SettingsGuild
     {
-        public string displayName { get; set; }
-        public ulong guildID { get; set; }
-        public SettingsTX tx { get; set; }
+        public string DisplayName { get; set; }
+        public ulong GuildID { get; set; }
+        public SettingsTX Tx { get; set; }
     }
 
     public class SettingsTX
     {
-        public decimal txfee { get; set; } = 0.0002M;
-        public string feeAccount { get; set; } = "txaccount";
+        public decimal Txfee { get; set; } = 0.0002M;
+        public string FeeAccount { get; set; } = "txaccount";
     }
 
-    
     public class SettingsHelp
     {
-        public string command { get; set; }
-        public string description { get; set; }
+        public string Command { get; set; }
+        public string Description { get; set; }
     }
 
     public class SettingsHandlerService

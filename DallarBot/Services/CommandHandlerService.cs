@@ -36,7 +36,7 @@ namespace DallarBot.Services
 
             discord.MessageReceived += HandleCommandAsync;
 
-            discord.SetGameAsync(settings.dallarSettings.startup.taskName);
+            discord.SetGameAsync(settings.dallarSettings.Startup.TaskName);
         }
 
         private async Task HandleCommandAsync(SocketMessage socketMessage)
