@@ -5,6 +5,7 @@ using DallarBot.Commands;
 using DallarBot.Services;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 
 namespace DallarBot
 {
@@ -69,8 +70,6 @@ namespace DallarBot
                 EnableMentionPrefix = true
             });
 
-
-
             foreach (CommandsNextExtension CommandsModule in DiscordClient.GetCommandsNext().Values)
             {
                 CommandsModule.RegisterCommands<TipCommands>();
@@ -78,6 +77,23 @@ namespace DallarBot
                 CommandsModule.RegisterCommands<ExchangeCommands>();
                 CommandsModule.RegisterCommands<DallarCommands>();
                 CommandsModule.SetHelpFormatter<HelpFormatter>();
+                CommandsModule.CommandErrored += async e =>
+                {
+                    if (e.Command == null)
+                    {
+                        return;
+                    }
+                    await LogHandlerService.LogUserActionAsync(e.Context, "Failed to invoke " + e.Command.ToString());
+                    await e.Context.RespondAsync($"{e.Context.User.Mention}: You have entered your command incorrectly.");
+
+                    DiscordChannel Channel = e.Context.Channel;
+                    if (e.Context.Member != null)
+                    {
+                        Channel = await e.Context.Member.CreateDmChannelAsync();
+                    }
+
+                    await e.Context.Client.GetCommandsNext().SudoAsync(e.Context.User, Channel, "d!help " + e.Command.Name);
+                };
             }
 
             await DiscordClient.StartAsync();
