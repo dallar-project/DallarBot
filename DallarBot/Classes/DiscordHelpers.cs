@@ -96,6 +96,18 @@ namespace DallarBot.Classes
             }
         }
 
+        public static async Task RespondAsDM(CommandContext Context, DiscordEmbed Response)
+        {
+            if (Context.Member != null)
+            {
+                await Context.Member.SendMessageAsync(embed: Response);
+            }
+            else
+            {
+                await Context.RespondAsync(embed: Response);
+            }
+        }
+
         public static bool HasMinimumStatus(DiscordPresence MemberPrescence, UserStatus MinimumStatus)
         {
             UserStatus MemberStatus = UserStatus.Offline;
