@@ -10,9 +10,11 @@ using DallarBot.Classes;
 
 namespace DallarBot.Commands
 {
-    public class MiscCommands
+    public class MiscCommands : BaseCommandModule
     {
         [Command("giveafuck")]
+        [Category("Misc")]
+        [Description("Emits the Emoji string GIVE A FUCK if user has permission to do so.")]
         public async Task GiveAFuck(CommandContext Context)
         {
             if (DiscordHelpers.IsUserAdmin(Context) || DiscordHelpers.IsUserModerator(Context) || DiscordHelpers.IsUserDallarDevTeam(Context))
@@ -26,6 +28,8 @@ namespace DallarBot.Commands
         /** Dad Joke API Puller */
 
         [Command("dad")]
+        
+        [Description("Fetchs a dad joke.")]
         public async Task FetchDadJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked Dad Joke");
@@ -41,6 +45,7 @@ namespace DallarBot.Commands
         /** Allar (Chuck Norris) API Puller */
 
         [Command("allar")]
+        [Description("Fetchs a Allar (Chuck Norris) joke.")]
         public async Task FetchAllarJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked Allar Joke");
@@ -65,6 +70,7 @@ namespace DallarBot.Commands
 
         [Command("momma")]
         [Aliases("mama","mom", "mum")]
+        [Description("Fetchs a Yo Momma joke.")]
         public async Task FetchMommaJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked mom joke.");

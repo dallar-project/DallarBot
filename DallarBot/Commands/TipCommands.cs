@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.CommandsNext.Attributes;
 using DallarBot.Services;
 using DallarBot.Classes;
@@ -10,7 +11,7 @@ using System.Collections.Generic;
 
 namespace DallarBot.Commands
 {
-    public class TipCommands
+    public class TipCommands : BaseCommandModule
     {
         [Command("balance")]
         [Aliases("bal")]

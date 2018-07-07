@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace DallarBot.Commands
 {
-    public class DallarCommands
+    public class DallarCommands : BaseCommandModule
     {
         [Command("difficulty")]
         [Aliases("diff", "block")]
