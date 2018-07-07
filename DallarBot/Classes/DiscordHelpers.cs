@@ -78,7 +78,7 @@ namespace DallarBot.Classes
 
         public static void DeleteNonPrivateMessage(CommandContext Context)
         {
-            if (Context.Member == null)
+            if (Context.Member != null)
             {
                 Context.Channel.DeleteMessageAsync(Context.Message);
             }

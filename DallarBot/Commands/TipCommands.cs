@@ -153,7 +153,7 @@ namespace DallarBot.Commands
         [Aliases("gift", "transfer", "give")]
         [HelpCategory("Tipping")]
         [Description("Sends Dallar to another Discord member")]
-        public async Task SendDallarToUser(CommandContext Context, [Description("Amount of Dallar to send")] string AmountStr, [Description("Discord Member to send to")] DiscordMember Member)
+        public async Task SendDallarToUser(CommandContext Context, [Description("Amount of Dallar to send")] string AmountStr, [Description("Mention a discord member to send to i.e. `@Allar`")] DiscordMember Member)
         {
             await SendDallarToUserInternal(Context, AmountStr, Member, false);
         }

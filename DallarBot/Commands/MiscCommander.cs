@@ -16,7 +16,7 @@ namespace DallarBot.Commands
 
         [Command("dad")]
         [HelpCategory("Joke")]
-        [Description("Fetchs a dad joke.")]
+        [Description("Fetchs a dad joke")]
         public async Task FetchDadJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked Dad Joke");
@@ -33,7 +33,7 @@ namespace DallarBot.Commands
 
         [Command("allar")]
         [HelpCategory("Joke")]
-        [Description("Fetchs a Allar (Chuck Norris) joke.")]
+        [Description("Fetchs a Allar (Chuck Norris) joke")]
         public async Task FetchAllarJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked Allar Joke");
@@ -59,7 +59,7 @@ namespace DallarBot.Commands
         [Command("momma")]
         [Aliases("mama","mom", "mum")]
         [HelpCategory("Joke")]
-        [Description("Fetchs a Yo Momma joke.")]
+        [Description("Fetchs a Yo Momma joke")]
         public async Task FetchMommaJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked mom joke.");
@@ -69,7 +69,7 @@ namespace DallarBot.Commands
 
         [Command("giveafuck")]
         [HelpCategory("Misc")]
-        [Description("Emits the Emoji string GIVE A FUCK if user has permission to do so.")]
+        [Description("Emits the Emoji string GIVE A FUCK if user has permission to do so")]
         public async Task GiveAFuck(CommandContext Context)
         {
             if (DiscordHelpers.IsUserAdmin(Context) || DiscordHelpers.IsUserModerator(Context) || DiscordHelpers.IsUserDallarDevTeam(Context))
