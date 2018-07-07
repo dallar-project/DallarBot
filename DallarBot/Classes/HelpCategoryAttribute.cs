@@ -5,11 +5,16 @@ using System.Text;
 
 namespace DallarBot.Classes
 {
-    public class CategoryAttribute : Attribute
+    public class HelpCategoryAttribute : Attribute
     {
         public string Category;
 
-        public CategoryAttribute(string Category)
+        public HelpCategoryAttribute()
+        {
+            Category = "Uncategorized";
+        }
+
+        public HelpCategoryAttribute(string Category)
         {
             this.Category = Category;
         }
@@ -27,9 +32,9 @@ namespace DallarBot.Classes
             // Displaying output.  
             foreach (System.Attribute attr in attrs)
             {
-                if (attr is CategoryAttribute)
+                if (attr is HelpCategoryAttribute)
                 {
-                    return ((CategoryAttribute)attr).GetCategory();
+                    return ((HelpCategoryAttribute)attr).GetCategory();
                 }
             }
 

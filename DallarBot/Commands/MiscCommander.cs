@@ -12,23 +12,10 @@ namespace DallarBot.Commands
 {
     public class MiscCommands : BaseCommandModule
     {
-        [Command("giveafuck")]
-        [Category("Misc")]
-        [Description("Emits the Emoji string GIVE A FUCK if user has permission to do so.")]
-        public async Task GiveAFuck(CommandContext Context)
-        {
-            if (DiscordHelpers.IsUserAdmin(Context) || DiscordHelpers.IsUserModerator(Context) || DiscordHelpers.IsUserDallarDevTeam(Context))
-            {
-                await LogHandlerService.LogUserActionAsync(Context, "Invoked GiveAFuck");
-                await Context.TriggerTypingAsync();
-                await Context.RespondAsync(":regional_indicator_g: :regional_indicator_i: :regional_indicator_v: :regional_indicator_e: :a: :regional_indicator_f: :regional_indicator_u: :regional_indicator_c: :regional_indicator_k:");
-            }
-        }
-
         /** Dad Joke API Puller */
 
         [Command("dad")]
-        
+        [HelpCategory("Joke")]
         [Description("Fetchs a dad joke.")]
         public async Task FetchDadJoke(CommandContext Context)
         {
@@ -45,6 +32,7 @@ namespace DallarBot.Commands
         /** Allar (Chuck Norris) API Puller */
 
         [Command("allar")]
+        [HelpCategory("Joke")]
         [Description("Fetchs a Allar (Chuck Norris) joke.")]
         public async Task FetchAllarJoke(CommandContext Context)
         {
@@ -70,12 +58,26 @@ namespace DallarBot.Commands
 
         [Command("momma")]
         [Aliases("mama","mom", "mum")]
+        [HelpCategory("Joke")]
         [Description("Fetchs a Yo Momma joke.")]
         public async Task FetchMommaJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked mom joke.");
             await Context.TriggerTypingAsync();
             await Context.RespondAsync($"{Context.User.Mention}: {Program.YoMommaJokes.GetRandomYoMommaJoke()}");
+        }
+
+        [Command("giveafuck")]
+        [HelpCategory("Misc")]
+        [Description("Emits the Emoji string GIVE A FUCK if user has permission to do so.")]
+        public async Task GiveAFuck(CommandContext Context)
+        {
+            if (DiscordHelpers.IsUserAdmin(Context) || DiscordHelpers.IsUserModerator(Context) || DiscordHelpers.IsUserDallarDevTeam(Context))
+            {
+                await LogHandlerService.LogUserActionAsync(Context, "Invoked GiveAFuck");
+                await Context.TriggerTypingAsync();
+                await Context.RespondAsync(":regional_indicator_g: :regional_indicator_i: :regional_indicator_v: :regional_indicator_e: :a: :regional_indicator_f: :regional_indicator_u: :regional_indicator_c: :regional_indicator_k:");
+            }
         }
     }
 }
