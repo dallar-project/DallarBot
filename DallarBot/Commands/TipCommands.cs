@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using System;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.CommandsNext.Attributes;
 using DallarBot.Services;
 using DallarBot.Classes;
@@ -47,22 +46,28 @@ namespace DallarBot.Commands
         [Description("Sends information on how to deposit Dallar")]
         public async Task GetDallarDeposit(CommandContext Context)
         {
-            await Context.TriggerTypingAsync();
+            if (Context.Member != null)
+            {
+                await Context.TriggerTypingAsync();
+            }
 
             if (Program.Daemon.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string Wallet))
             {
-                await DiscordHelpers.RespondAsDM(Context, "DallarBot is a Discord bot dedicated to allowing individual users on the server to easily tip each other in the chatbox. Please note that it is hosted on an external server, which means that theoretically DallarBot is cross-platform!" + Environment.NewLine +
-                    Environment.NewLine + "Please note however that DallarBot does not access anyone's wallets directly to protect everyone's privacy: it introduces an additional step by creating an additional DallarBot - specific wallet for your unique user ID, and you must deposit / receive into it as a first secure layer before those dallars can access anyone's personal wallet." + Environment.NewLine +
-                    "Your DallarBot wallet should not be used to permanently store your funds!" + Environment.NewLine +
-                    Environment.NewLine + "Another important notice is that all Dallar transactions, whether it be through the DallarBot or through your personal wallet, incurs a flat combined fee of 0.0002 DAL(transaction fee + DallarBot fund fee.) The transaction fee is charged by the mining pool itself to validate your transactions, much akin to the default behavior of your Dallar wallet. The DallarBot fund fee is sampled from the leftover difference, to host the necessary external server to run DallarBot itself." + Environment.NewLine +
-                    Environment.NewLine + "Every transaction needs to be verified by the blockchain for 6 blocks(5 - 10 minute period approximate.) If you check your balances right after a transaction, it will notify your transaction as " + '\u0022' + "pending" + '\u0022' + " Any pending funds will not be available until that period has been completed." + Environment.NewLine +
-                    Environment.NewLine + "To deposit Dallar into your DallarBot account, please send funds from your wallet to the following address: " +
-                    Environment.NewLine + "`" + Wallet + "`");
+                DiscordEmbedBuilder EmbedBuilder = new DiscordEmbedBuilder();
 
-                // This is causing a rate limit and/or crash?
-                //await Context.User.SendFileAsync(global.qr.GenerateQRBitmap("dallar:" + wallet), "Wallet.png");
+                EmbedBuilder.WithTitle("Dallar Bot Depositing Help");
+                EmbedBuilder.WithDescription("DallarBot is a Discord bot dedicated to allowing individual users on the server to easily tip each other in the chatbox. It generates a wallet for every Discord user, and you can withdraw into any address any time." + Environment.NewLine + Environment.NewLine + 
+                    "Dallar Bot does not access anyone's wallets directly in order to protect everyone's privacy.");
+
+                EmbedBuilder.AddField("Warning About Storage", "Dallar Bot should not be used as a long term storage for your Dallar. Dallar Bot is only accessible through Discord and if the Bot or Discord are down for any reason, you will *not* be able to access your stored Dallar.");
+                EmbedBuilder.AddField("Dallar Bot Fees", $"All transactions with Dallar Bot incur a flat {Program.SettingsHandler.Dallar.Txfee} DAL fee to cover the Dallar blockchain transaction fees as well as funding and maintenance costs sent to the Dallar Bot server hoster.");
+                EmbedBuilder.AddField("Blockchain Transactions", $"Dallar Bot uses the blockchain to keep track of its transactions, meaning your transactions will require 6 confirmation blocks before they are completed. This should take approximately 5 to 10 minutes under normal Dallar network conditions.");
+                EmbedBuilder.AddField("Depositing", $"You can deposit Dallar into your Dallar Bot balance by sending Dallar to this address generated specifically for you: `{Wallet}`");
+
+                EmbedBuilder.WithImageUrl($"https://api.qrserver.com/v1/create-qr-code/?data=dallar:{Wallet}&qzone=2");
 
                 await LogHandlerService.LogUserActionAsync(Context, $"Fetched deposit info.");
+                await DiscordHelpers.RespondAsDM(Context, EmbedBuilder.Build());
             }
             else
             {

@@ -52,8 +52,6 @@ namespace DallarBot.Services
             EmbedBuilder.WithAuthor(ctx.Client.CurrentUser.Username, "https://dallar.org", ctx.Client.CurrentUser.GetAvatarUrl(ImageFormat.Png, 64));
             EmbedBuilder.WithFooter("The Dallar Organization", ctx.Client.CurrentUser.GetAvatarUrl(ImageFormat.Png, 64));
             EmbedBuilder.WithTimestamp(DateTime.Now);
-
-            //StringBuilder.AddField("Help", "");
         }
 
         public override BaseHelpFormatter WithCommand(Command command)
@@ -76,21 +74,19 @@ namespace DallarBot.Services
             return this;
         }
 
-        // this method is called sixth, it sets the current group's subcommands
-        // if no group is being processed or current command is not a group, it 
-        // won't be called
         public override BaseHelpFormatter WithSubcommands(IEnumerable<Command> subcommands)
         {
             EmbedBuilder.WithDescription("You can get more specific help by also supplying the name of a command.");
 
-            Dictionary<string, List<Command>> CategorizedCommands = new Dictionary<string, List<Command>>();
-
-            // By pre-seeding we can control order
-            CategorizedCommands.Add("Tipping", new List<Command>());
-            CategorizedCommands.Add("Exchange", new List<Command>());
-            CategorizedCommands.Add("Dallar", new List<Command>());
-            CategorizedCommands.Add("Jokes", new List<Command>());
-            CategorizedCommands.Add("Misc", new List<Command>());
+            Dictionary<string, List<Command>> CategorizedCommands = new Dictionary<string, List<Command>>
+            {
+                // By pre-seeding we can control order
+                { "Tipping", new List<Command>() },
+                { "Exchange", new List<Command>() },
+                { "Dallar", new List<Command>() },
+                { "Jokes", new List<Command>() },
+                { "Misc", new List<Command>() }
+            };
 
             foreach (Command command in subcommands)
             {
