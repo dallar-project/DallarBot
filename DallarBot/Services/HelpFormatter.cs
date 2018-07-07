@@ -21,6 +21,7 @@
 // This is a commands example. It shows how to properly utilize 
 // CommandsNext, as well as use its advanced functionality.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,6 +49,9 @@ namespace DallarBot.Services
 
             EmbedBuilder.WithTitle("Help");
             EmbedBuilder.WithColor(DiscordColor.Blue);
+            EmbedBuilder.WithAuthor(ctx.Client.CurrentUser.Username, "https://dallar.org", ctx.Client.CurrentUser.GetAvatarUrl(ImageFormat.Png, 64));
+            EmbedBuilder.WithFooter("The Dallar Organization", ctx.Client.CurrentUser.GetAvatarUrl(ImageFormat.Png, 64));
+            EmbedBuilder.WithTimestamp(DateTime.Now);
 
             //StringBuilder.AddField("Help", "");
         }
