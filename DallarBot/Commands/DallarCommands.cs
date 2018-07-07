@@ -14,6 +14,8 @@ namespace DallarBot.Commands
     {
         [Command("difficulty")]
         [Aliases("diff", "block")]
+        [Description("Gets the current block difficulty")]
+        [HelpCategory("Dallar")]
         public async Task GetDallarDifficulty(CommandContext Context)
         {
             await Context.TriggerTypingAsync();

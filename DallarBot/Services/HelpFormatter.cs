@@ -44,15 +44,30 @@ namespace DallarBot.Services
             : base(ctx)
         {
             StringBuilder = new StringBuilder();
+            EmbedBuilder = new DiscordEmbedBuilder();
+
+            EmbedBuilder.WithTitle("Help");
+            EmbedBuilder.WithColor(DiscordColor.Blue);
 
             //StringBuilder.AddField("Help", "");
         }
 
         public override BaseHelpFormatter WithCommand(Command command)
         {
-            this.StringBuilder.Append("Command: ")
-                .AppendLine(Formatter.Bold(command.Name))
-                .AppendLine();
+            EmbedBuilder.WithDescription($"`{command.Name}`");
+
+            EmbedBuilder.AddField("Description", command.Description);
+
+            if (command.Aliases.Count > 0)
+            {
+                EmbedBuilder.AddField("Aliases", string.Join("\n", command.Aliases.Select(s => $"`{s}`")));
+            }
+            
+            if (command.Overloads[0].Arguments.Count > 0)
+            {
+                EmbedBuilder.AddField("Syntax", $"`{command.Name} {string.Join(" ", command.Overloads[0].Arguments.Select(arg => $"<{arg.Name}>"))}`");
+                EmbedBuilder.AddField("Arguments", string.Join("\n", command.Overloads[0].Arguments.Select(arg => $"`<{arg.Name}>` - {arg.Description}")));
+            }
 
             return this;
         }
@@ -62,12 +77,49 @@ namespace DallarBot.Services
         // won't be called
         public override BaseHelpFormatter WithSubcommands(IEnumerable<Command> subcommands)
         {
-            this.StringBuilder.Append("Subcommands: ")
-                .AppendLine(string.Join(", ", subcommands.Select(xc =>
+            EmbedBuilder.WithDescription("You can get more specific help by also supplying the name of a command.");
+
+            Dictionary<string, List<Command>> CategorizedCommands = new Dictionary<string, List<Command>>();
+
+            // By pre-seeding we can control order
+            CategorizedCommands.Add("Tipping", new List<Command>());
+            CategorizedCommands.Add("Exchange", new List<Command>());
+            CategorizedCommands.Add("Dallar", new List<Command>());
+            CategorizedCommands.Add("Jokes", new List<Command>());
+            CategorizedCommands.Add("Misc", new List<Command>());
+
+            foreach (Command command in subcommands)
+            {
+                if (command.Name == "help")
                 {
-                    return $"{xc.Name} ({CategoryAttribute.GetCategory(xc.GetType())})";
-                })))
-                .AppendLine();
+                    continue;
+                }
+
+                string Category = ((HelpCategoryAttribute)command.CustomAttributes.FirstOrDefault(a => a is HelpCategoryAttribute))?.GetCategory();
+                if (Category == null)
+                {
+                    Category = "Uncategorized";
+                }
+
+                if (CategorizedCommands.ContainsKey(Category))
+                {
+                    CategorizedCommands[Category].Add(command);
+                }
+                else
+                {
+                    CategorizedCommands[Category] = new List<Command>(new Command[] { command });
+                }
+            }
+
+            foreach (var Category in CategorizedCommands)
+            {
+                if (Category.Value.Count == 0)
+                {
+                    continue;
+                }
+
+                EmbedBuilder.AddField($"{Category.Key} Commands", string.Join("\n", Category.Value.Select(xc => $"`{xc.Name}` - {xc.Description}")));
+            }
 
             return this;
         }
@@ -77,7 +129,7 @@ namespace DallarBot.Services
 
         public override CommandHelpMessage Build()
         {
-            return new CommandHelpMessage(this.StringBuilder.ToString().Replace("\r\n", "\n"));
+            return new CommandHelpMessage(embed: EmbedBuilder.Build());
         }
     }
 }

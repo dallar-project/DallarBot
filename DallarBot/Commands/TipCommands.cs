@@ -15,6 +15,8 @@ namespace DallarBot.Commands
     {
         [Command("balance")]
         [Aliases("bal")]
+        [Description("Displays your current Dallar balance")]
+        [HelpCategory("Tipping")]
         public async Task GetAccountBalance(CommandContext Context)
         {
             await Context.TriggerTypingAsync();
@@ -41,6 +43,8 @@ namespace DallarBot.Commands
         }
 
         [Command("deposit")]
+        [HelpCategory("Tipping")]
+        [Description("Sends information on how to deposit Dallar")]
         public async Task GetDallarDeposit(CommandContext Context)
         {
             await Context.TriggerTypingAsync();
@@ -70,7 +74,9 @@ namespace DallarBot.Commands
         }
 
         [Command("withdraw")]
-        public async Task WithdrawFromWalletInstant(CommandContext Context, string AmountStr, string PublicAddress)
+        [HelpCategory("Tipping")]
+        [Description("Withdraws Dallar into given Dallar wallet address")]
+        public async Task WithdrawFromWalletInstant(CommandContext Context, [Description("Amount of DAL to withdraw. Use 'all' for your entire balance")] string AmountStr, [Description("Dallar Wallet Address to withdraw Dallar to")] string PublicAddress)
         {
             await Context.TriggerTypingAsync();
 
@@ -143,10 +149,66 @@ namespace DallarBot.Commands
             DiscordHelpers.DeleteNonPrivateMessage(Context);
         }
 
-        // The 'real' send function that all sends should filter into
         [Command("send")]
         [Aliases("gift", "transfer", "give")]
-        public async Task SendDallarToUser(CommandContext Context, string AmountStr, DiscordMember Member, bool IsRandomSend = false)
+        [HelpCategory("Tipping")]
+        [Description("Sends Dallar to another Discord member")]
+        public async Task SendDallarToUser(CommandContext Context, [Description("Amount of Dallar to send")] string AmountStr, [Description("Discord Member to send to")] DiscordMember Member)
+        {
+            await SendDallarToUserInternal(Context, AmountStr, Member, false);
+        }
+
+        [Command("send-random-here")]
+        [Aliases("gift-random-here", "transfer-random-here", "give-random-here")]
+        [HelpCategory("Tipping")]
+        [Description("Sends Dallar to a random non-offline user in the server")]
+        public async Task SendRandomUserHereOnly(CommandContext Context, [Description("Amount of Dallar to send")] decimal Amount)
+        {
+            await SendRandomUserInternal(Context, Amount, UserStatus.Idle);
+        }
+
+        [Command("send-random-online")]
+        [Aliases("gift-random-online", "transfer-random-online", "give-random-online")]
+        [HelpCategory("Tipping")]
+        [Description("Sends Dallar to a random user who must be online in the server (no idle, no do not disturb)")]
+        public async Task SendRandomUserOnlineOnly(CommandContext Context, [Description("Amount of Dallar to send")] decimal Amount)
+        {
+            await SendRandomUserInternal(Context, Amount, UserStatus.Online);
+        }
+
+        [Command("send-random")]
+        [Aliases("gift-random", "transfer-random", "give-random")]
+        [HelpCategory("Tipping")]
+        [Description("Sends Dallar to a random user, including offline users")]
+        public async Task SendRandomUser(CommandContext Context, [Description("Amount of Dallar to send")] decimal Amount)
+        {
+            await SendRandomUserInternal(Context, Amount);
+        }
+
+        public async Task SendRandomUserInternal(CommandContext Context, decimal Amount, UserStatus MinimumStatus = UserStatus.Offline)
+        {
+            await Context.TriggerTypingAsync();
+
+            await LogHandlerService.LogUserActionAsync(Context, $"Invoked sending {Amount} to a random user with minimum status {MinimumStatus.ToString()}.");
+
+            IEnumerable<DiscordMember> Members = DiscordHelpers.GetHumansInContextGuild(Context, true, MinimumStatus);
+            int randomIndex = Program.RandomManager.GetRandomInteger(0, Members.Count() - 1);
+
+            DiscordMember Member = Members.ElementAt(randomIndex);
+            if (Member != null)
+            {
+                await SendDallarToUserInternal(Context, Amount.ToString(), Member, true);
+            }
+            else
+            {   // failed to get random member?
+                await LogHandlerService.LogUserActionAsync(Context, $"Failed to get a random user from the guild.");
+                await Context.RespondAsync($"{Context.User.Mention}: DallarBot has failed to get a random user from the guild. Please contact an Administrator.");
+                _ = Context.Message.DeleteAsync();
+            }
+        }
+
+        // The 'real' send function that all sends should filter into
+        public async Task SendDallarToUserInternal(CommandContext Context, [Description("Amount of Dallar to send")] string AmountStr, DiscordMember Member, bool IsRandomSend = false)
         {
             await Context.TriggerTypingAsync();
 
@@ -226,7 +288,7 @@ namespace DallarBot.Commands
                     await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
                     await Context.RespondAsync($"{Context.User.Mention}: You have successfully sent {Member.Mention} {Amount} DAL. ($ {decimal.Round(Amount * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD)");
                 }
-                
+
                 _ = Context.Message.DeleteAsync();
                 return;
             }
@@ -236,49 +298,6 @@ namespace DallarBot.Commands
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot has failed to send{RandomUserString} {Amount} DAL. Please contact an Administrator.");
                 _ = Context.Message.DeleteAsync();
                 return;
-            }
-        }
-
-        [Command("send-random-here")]
-        [Aliases("gift-random-here", "transfer-random-here", "give-random-here")]
-        public async Task SendRandomUserHereOnly(CommandContext Context, decimal Amount)
-        {
-            await SendRandomUserInternal(Context, Amount, UserStatus.Idle);
-        }
-
-        [Command("send-random-online")]
-        [Aliases("gift-random-online", "transfer-random-online", "give-random-online")]
-        public async Task SendRandomUserOnlineOnly(CommandContext Context, decimal Amount)
-        {
-            await SendRandomUserInternal(Context, Amount, UserStatus.Online);
-        }
-
-        [Command("send-random")]
-        [Aliases("gift-random", "transfer-random", "give-random")]
-        public async Task SendRandomUser(CommandContext Context, decimal Amount)
-        {
-            await SendRandomUserInternal(Context, Amount);
-        }
-
-        public async Task SendRandomUserInternal(CommandContext Context, decimal Amount, UserStatus MinimumStatus = UserStatus.Offline)
-        {
-            await Context.TriggerTypingAsync();
-
-            await LogHandlerService.LogUserActionAsync(Context, $"Invoked sending {Amount} to a random user with minimum status {MinimumStatus.ToString()}.");
-
-            IEnumerable<DiscordMember> Members = DiscordHelpers.GetHumansInContextGuild(Context, true, MinimumStatus);
-            int randomIndex = Program.RandomManager.GetRandomInteger(0, Members.Count() - 1);
-
-            DiscordMember Member = Members.ElementAt(randomIndex);
-            if (Member != null)
-            {
-                await SendDallarToUser(Context, Amount.ToString(), Member, true);
-            }
-            else
-            {   // failed to get random member?
-                await LogHandlerService.LogUserActionAsync(Context, $"Failed to get a random user from the guild.");
-                await Context.RespondAsync($"{Context.User.Mention}: DallarBot has failed to get a random user from the guild. Please contact an Administrator.");
-                _ = Context.Message.DeleteAsync();
             }
         }
     }

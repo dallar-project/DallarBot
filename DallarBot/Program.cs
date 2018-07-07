@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Net;
 using System.Threading.Tasks;
-using DallarBot.Classes;
 using DallarBot.Commands;
 using DallarBot.Services;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.Entities;
 
 namespace DallarBot
 {
