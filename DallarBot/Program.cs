@@ -1,72 +1,87 @@
 ﻿using System;
-using System.IO;
+using System.Net;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-
+using DallarBot.Commands;
 using DallarBot.Services;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
 
 namespace DallarBot
-{ 
-    class Program : ModuleBase<SocketCommandContext>
+{
+    public class Program
     {
+        static DiscordShardedClient DiscordClient;
+        public static SettingsHandlerService SettingsHandler;
+        public static DaemonService Daemon;
+        public static DigitalPriceExchangeService DigitalPriceExchange;
+        public static RandomManagerService RandomManager;
+        public static YoMommaJokeService YoMommaJokes;
+
         static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
-    
-        private DiscordSocketClient client;
-
-        public async Task MainAsync()
         {
-            Console.WriteLine(CenterString("▒█▀▀▄ █▀▀█ █░░ █░░ █▀▀█ █▀▀█ ▒█▀▀█ █▀▀█ ▀▀█▀▀ "));
-            Console.WriteLine(CenterString("▒█░▒█ █▄▄█ █░░ █░░ █▄▄█ █▄▄▀ ▒█▀▀▄ █░░█ ░░█░░ "));
-            Console.WriteLine(CenterString("▒█▄▄▀ ▀░░▀ ▀▀▀ ▀▀▀ ▀░░▀ ▀░▀▀ ▒█▄▄█ ▀▀▀▀ ░░▀░░ "));
+            SettingsHandler = SettingsHandlerService.FromConfig();
+            DigitalPriceExchange = new DigitalPriceExchangeService();
+            RandomManager = new RandomManagerService();
+            YoMommaJokes = new YoMommaJokeService();
 
-            Console.WriteLine("");
-            Console.WriteLine(CenterString("----------------------------"));
-            Console.WriteLine("");
-
-            Console.WriteLine(CenterString("Initialising bot..."));
-
-            client = new DiscordSocketClient(new DiscordSocketConfig()
+            Daemon = new DaemonService(SettingsHandler.Daemon.IpAddress + ":" + SettingsHandler.Daemon.Port)
             {
-                LogLevel = LogSeverity.Verbose
+                credentials = new NetworkCredential(SettingsHandler.Daemon.Username, SettingsHandler.Daemon.Password)
+            };
+
+            // Ensure fee account is already created
+            Daemon.GetWalletAddressFromUser(SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
+
+            MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        static async Task MainAsync(string[] args)
+        {
+            Console.WriteLine(LogHandlerService.CenterString("▒█▀▀▄ █▀▀█ █░░ █░░ █▀▀█ █▀▀█ ▒█▀▀█ █▀▀█ ▀▀█▀▀ "));
+            Console.WriteLine(LogHandlerService.CenterString("▒█░▒█ █▄▄█ █░░ █░░ █▄▄█ █▄▄▀ ▒█▀▀▄ █░░█ ░░█░░ "));
+            Console.WriteLine(LogHandlerService.CenterString("▒█▄▄▀ ▀░░▀ ▀▀▀ ▀▀▀ ▀░░▀ ▀░▀▀ ▒█▄▄█ ▀▀▀▀ ░░▀░░ "));
+
+            Console.WriteLine();
+            Console.WriteLine(LogHandlerService.CenterString("----------------------------"));
+            Console.WriteLine();
+
+            Console.WriteLine(LogHandlerService.CenterString("Initialising bot..."));
+
+            DiscordClient = new DiscordShardedClient(new DiscordConfiguration
+            {
+                Token = SettingsHandler.Discord.BotToken,
+                TokenType = TokenType.Bot,
+                LogLevel = LogLevel.Debug
             });
 
-            var services = ConfigureServices();
-            await services.GetRequiredService<CommandHandlerService>().InitializeAsync(services);
-            services.GetRequiredService<SettingsHandlerService>();
-            services.GetRequiredService<LogHandlerService>();
-            services.GetRequiredService<GlobalHandlerService>();
+            DiscordClient.DebugLogger.LogMessageReceived += LogHandlerService.DiscordLogMessageReceived;
 
-            await client.LoginAsync(TokenType.Bot, services.GetService<SettingsHandlerService>().dallarSettings.startup.token);
-            await client.StartAsync();
+            DiscordClient.MessageCreated += async e =>
+            {
+                if (e.Message.Content.ToLower().StartsWith("ping"))
+                    await e.Message.RespondAsync("pong!");
+            };
 
+            await DiscordClient.UseCommandsNextAsync(new CommandsNextConfiguration
+            {
+                StringPrefixes = new string[] { "d!" },
+                EnableDms = true,
+                EnableMentionPrefix = true
+            });
+
+
+
+            foreach (CommandsNextExtension CommandsModule in DiscordClient.GetCommandsNext().Values)
+            {
+                CommandsModule.RegisterCommands<TipCommands>();
+                CommandsModule.RegisterCommands<MiscCommands>();
+                CommandsModule.RegisterCommands<ExchangeCommands>();
+                CommandsModule.RegisterCommands<DallarCommands>();
+                CommandsModule.SetHelpFormatter<HelpFormatter>();
+            }
+
+            await DiscordClient.StartAsync();
             await Task.Delay(-1);
-        }
-
-        private IServiceProvider ConfigureServices()
-        {
-            return new ServiceCollection()
-                // Base
-                .AddSingleton(client)
-                .AddSingleton<CommandService>()
-                .AddSingleton<CommandHandlerService>()
-                .AddSingleton<GlobalHandlerService>()
-                .AddSingleton<SettingsHandlerService>()
-                .AddSingleton<LogHandlerService>()
-                // Add additional services here...
-                .BuildServiceProvider();
-        }
-
-        public string CenterString(string value)
-        {
-            return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
         }
     }
 }

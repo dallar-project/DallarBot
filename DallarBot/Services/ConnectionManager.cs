@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Net;
 using System.IO;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using DallarBot.Classes;
 
-namespace DallarBot.Classes
+namespace DallarBot.Services
 {
-    public class ConnectionManager
+    public class DaemonService
     {
         public Uri uri;
         public ICredentials credentials;
 
-        public ConnectionManager(string _uri)
+        public DaemonService(string _uri)
         {
             var uriBuilder = new UriBuilder(_uri);
             uri = uriBuilder.Uri;
@@ -139,16 +139,16 @@ namespace DallarBot.Classes
             return (TransactionID != null && TransactionID != "");
         }
 
-        public bool SendMinusFees(string fromAccount, string toWallet, string feeAccount, decimal txfee, decimal amount)
+        public bool SendMinusFees(string fromAccount, string toWallet, decimal amount)
         {
+            DallarHelpers.GetTXFeeAndAccount(out decimal TxFee, out string FeeAccount);
+
             string txid = SendToAddress(fromAccount, toWallet, amount);
-            bool success = (txid != null || txid != "");
-            if (success)
+            if (txid != null || txid != "")
             {
                 decimal transactionFee = GetTransactionFee(txid);
-                decimal remainder = transactionFee + txfee;
-                success = MoveToAddress(fromAccount, feeAccount, remainder);
-                return success;
+                decimal remainder = transactionFee + TxFee;
+                return MoveToAddress(fromAccount, FeeAccount, remainder);
             }
             return false;
         }
@@ -180,7 +180,7 @@ namespace DallarBot.Classes
             }
         }
 
-        public bool isAddressValid(string address)
+        public bool IsAddressValid(string address)
         {
             if (address.Length > 20 && address.Length < 48)
             {
