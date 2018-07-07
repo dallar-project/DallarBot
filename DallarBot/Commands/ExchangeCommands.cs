@@ -6,7 +6,7 @@ using DallarBot.Services;
 
 namespace DallarBot.Commands
 {
-    public class ExchangeCommands
+    public class ExchangeCommands : BaseCommandModule
     {
         /** USD to Dallar **/
 

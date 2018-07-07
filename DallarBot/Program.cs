@@ -15,7 +15,6 @@ namespace DallarBot
     public class Program
     {
         static DiscordShardedClient DiscordClient;
-        static ReadOnlyDictionary<int, CommandsNextModule> DiscordCommands;
         public static SettingsHandlerService SettingsHandler;
         public static DaemonService Daemon;
         public static DigitalPriceExchangeService DigitalPriceExchange;
@@ -67,19 +66,22 @@ namespace DallarBot
                     await e.Message.RespondAsync("pong!");
             };
 
-            DiscordCommands = (ReadOnlyDictionary<int, CommandsNextModule>)DiscordClient.UseCommandsNext(new CommandsNextConfiguration
+            await DiscordClient.UseCommandsNextAsync(new CommandsNextConfiguration
             {
-                StringPrefix = "d!",
+                StringPrefixes = new string[] { "d!" },
                 EnableDms = true,
                 EnableMentionPrefix = true
             });
 
-            foreach (CommandsNextModule CommandsModule in DiscordCommands.Values)
+
+
+            foreach (CommandsNextExtension CommandsModule in DiscordClient.GetCommandsNext().Values)
             {
                 CommandsModule.RegisterCommands<TipCommands>();
                 CommandsModule.RegisterCommands<MiscCommands>();
                 CommandsModule.RegisterCommands<ExchangeCommands>();
                 CommandsModule.RegisterCommands<DallarCommands>();
+                CommandsModule.SetHelpFormatter<HelpFormatter>();
             }
 
             await DiscordClient.StartAsync();
