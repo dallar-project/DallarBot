@@ -10,6 +10,7 @@ using System.Collections.Generic;
 
 namespace DallarBot.Commands
 {
+    [RequireBotPermissions(DSharpPlus.Permissions.ManageMessages)]
     public class DallarCommands : BaseCommandModule
     {
         [Command("difficulty")]

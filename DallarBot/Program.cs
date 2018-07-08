@@ -6,6 +6,7 @@ using DallarBot.Commands;
 using DallarBot.Services;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 
@@ -84,6 +85,11 @@ namespace DallarBot
                     // first command failure on boot throws a null exception. Not sure why?
                     // Afterwards, this event logic always seems to work okay without error
 
+                    if (e.Exception is ChecksFailedException)
+                    {
+                        return;
+                    }
+
                     if (e.Command == null)
                     {
                         return;
@@ -99,7 +105,9 @@ namespace DallarBot
                     await e.Context.Client.GetCommandsNext().SudoAsync(e.Context.User, Channel, "d!help " + e.Command.Name);
                     DiscordHelpers.DeleteNonPrivateMessage(e.Context);
                 };
+
             }
+
 
             await DiscordClient.UseInteractivityAsync(new InteractivityConfiguration
             {

@@ -8,6 +8,7 @@ using DSharpPlus.Entities;
 
 namespace DallarBot.Commands
 {
+    [RequireBotPermissions(DSharpPlus.Permissions.ManageMessages)]
     public class ExchangeCommands : BaseCommandModule
     {
         /** USD to Dallar **/

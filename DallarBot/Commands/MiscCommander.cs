@@ -12,6 +12,7 @@ using DSharpPlus.Entities;
 
 namespace DallarBot.Commands
 {
+    [RequireBotPermissions(DSharpPlus.Permissions.ManageMessages)]
     public class MiscCommands : BaseCommandModule
     {
         /** Dad Joke API Puller */
