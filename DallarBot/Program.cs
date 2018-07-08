@@ -70,11 +70,13 @@ namespace DallarBot
             {
                 StringPrefixes = new string[] { "d!" },
                 EnableDms = true,
-                EnableMentionPrefix = true
+                EnableMentionPrefix = true,
+                EnableDefaultHelp = false
             });
 
             foreach (CommandsNextExtension CommandsModule in DiscordClient.GetCommandsNext().Values)
             {
+                CommandsModule.RegisterCommands<HelpCommands>();
                 CommandsModule.RegisterCommands<TipCommands>();
                 CommandsModule.RegisterCommands<MiscCommands>();
                 CommandsModule.RegisterCommands<ExchangeCommands>();
