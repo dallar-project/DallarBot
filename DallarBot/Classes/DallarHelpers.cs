@@ -40,5 +40,20 @@ namespace DallarBot.Classes
             Amount = 0m;
             return decimal.TryParse(AmountStr, out Amount);
         }
+
+        public static bool UserPayAmountToFeeAccount(DiscordUser User, decimal Amount)
+        {
+            if (!CanUserAffordTransactionAmount(User, Amount))
+            {
+                return false;
+            }
+
+            if (!Program.Daemon.SendMinusFees(User.Id.ToString(), Program.Daemon.GetAccountAddress(Program.SettingsHandler.Dallar.FeeAccount), Amount))
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

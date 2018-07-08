@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext;
 using DallarBot.Services;
 using DallarBot.Classes;
+using DSharpPlus.Entities;
 
 namespace DallarBot.Commands
 {
@@ -29,8 +30,7 @@ namespace DallarBot.Commands
 
             await Program.DigitalPriceExchange.FetchValueInfo();
             var Info = String.Format("{0:#,##0.00000000}", Amount) + " USD is " + String.Format("{0:#,##0.00000000}", decimal.Round(ParsedAmount / Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 8)) + " DAL.";
-            await Context.RespondAsync($"{Context.User.Mention}: {Info}");
-            _ = Context.Message.DeleteAsync();
+            await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: {Info}");
         }
 
         /** BTC to Dallar */
@@ -53,8 +53,7 @@ namespace DallarBot.Commands
 
             await Program.DigitalPriceExchange.FetchValueInfo();
             var Info = String.Format("{0:#,##0.00000000}", ParsedAmount) + " BTC is " + String.Format("{0:#,##0.00000000}", decimal.Round(ParsedAmount / Program.DigitalPriceExchange.DallarInfo.Price, 8)) + " DAL.";
-            await Context.RespondAsync($"{Context.User.Mention}: {Info}");
-            _ = Context.Message.DeleteAsync();
+            await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: {Info}");
         }
 
         /** Dallar to BTC/USD */
@@ -87,8 +86,7 @@ namespace DallarBot.Commands
                 $"24 Hour Stats: :arrow_down_small: {decimal.Round((Program.DigitalPriceExchange.DallarInfo.Low.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero)} sats / :arrow_up_small: {decimal.Round((Program.DigitalPriceExchange.DallarInfo.High.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero)} sats / :arrows_counterclockwise: {Program.DigitalPriceExchange.DallarInfo.VolumeMarket} BTC" + Environment.NewLine +
                 $"{ChangeEmoji} {Program.DigitalPriceExchange.DallarInfo.PriceChange} Change in 24 Hours";
 
-            await Context.RespondAsync(Info);
-            _ = Context.Message.DeleteAsync();
+            await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: {Info}");
         }
     }
 }

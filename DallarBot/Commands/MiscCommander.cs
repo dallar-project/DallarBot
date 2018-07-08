@@ -7,6 +7,8 @@ using Newtonsoft.Json;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext;
 using DallarBot.Classes;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Entities;
 
 namespace DallarBot.Commands
 {
@@ -17,9 +19,19 @@ namespace DallarBot.Commands
         [Command("dad")]
         [HelpCategory("Joke")]
         [Description("Fetches a dad joke")]
+        [Cost(1.0f)]
         public async Task FetchDadJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked Dad Joke");
+
+            if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
+            {
+                await LogHandlerService.LogUserActionAsync(Context, "Failed charged for dad Joke");
+                return;
+            }
+
+            await LogHandlerService.LogUserActionAsync(Context, "Successfully charged for dad Joke");
+
             await Context.TriggerTypingAsync();
 
             var client = new WebClient();
@@ -34,14 +46,23 @@ namespace DallarBot.Commands
         [Command("allar")]
         [HelpCategory("Joke")]
         [Description("Fetches an Allar (Chuck Norris) joke")]
+        [Cost(1.0f)]
         public async Task FetchAllarJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked Allar Joke");
-            await Context.TriggerTypingAsync();
 
+            if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
+            {
+                await LogHandlerService.LogUserActionAsync(Context, "Failed charged for Allar Joke");
+                return;
+            }
+
+            await LogHandlerService.LogUserActionAsync(Context, "Successfully charged for Allar Joke");
+
+            await Context.TriggerTypingAsync();
             var httpClient = new HttpClient();
             var content = await httpClient.GetStringAsync("http://api.icndb.com/jokes/random?firstName=Michael&lastName=Allar");
-            
+
             try
             {
                 dynamic jokeResult = JsonConvert.DeserializeObject(content);
@@ -51,18 +72,28 @@ namespace DallarBot.Commands
             }
             catch
             {
-                await LogHandlerService.LogUserActionAsync(Context, "Failed to invoke Allar Joke");
+                await LogHandlerService.LogUserActionAsync(Context, "Failed to perform Allar Joke");
                 await Context.RespondAsync($"{Context.User.Mention}: Failed to fetch joke. Please contact an Administrator.");
-            }            
+            }
         }
 
         [Command("momma")]
         [Aliases("mama","mom", "mum")]
         [HelpCategory("Joke")]
         [Description("Fetches a Yo Momma joke")]
+        [Cost(1.0f)]
         public async Task FetchMommaJoke(CommandContext Context)
         {
             await LogHandlerService.LogUserActionAsync(Context, "Invoked mom joke.");
+
+            if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
+            {
+                await LogHandlerService.LogUserActionAsync(Context, "Failed charged for mom Joke");
+                return;
+            }
+
+            await LogHandlerService.LogUserActionAsync(Context, "Successfully charged for mom Joke");
+
             await Context.TriggerTypingAsync();
             await Context.RespondAsync($"{Context.User.Mention}: {Program.YoMommaJokes.GetRandomYoMommaJoke()}");
         }

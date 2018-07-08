@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using DallarBot.Classes;
 using DallarBot.Commands;
 using DallarBot.Services;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
 
 namespace DallarBot
 {
@@ -79,12 +81,14 @@ namespace DallarBot
                 CommandsModule.SetHelpFormatter<HelpFormatter>();
                 CommandsModule.CommandErrored += async e =>
                 {
+                    // first command failure on boot throws a null exception. Not sure why?
+                    // Afterwards, this event logic always seems to work okay without error
+
                     if (e.Command == null)
                     {
                         return;
                     }
                     await LogHandlerService.LogUserActionAsync(e.Context, "Failed to invoke " + e.Command.ToString());
-                    await e.Context.RespondAsync($"{e.Context.User.Mention}: You have entered your command incorrectly.");
 
                     DiscordChannel Channel = e.Context.Channel;
                     if (e.Context.Member != null)
@@ -93,8 +97,14 @@ namespace DallarBot
                     }
 
                     await e.Context.Client.GetCommandsNext().SudoAsync(e.Context.User, Channel, "d!help " + e.Command.Name);
+                    DiscordHelpers.DeleteNonPrivateMessage(e.Context);
                 };
             }
+
+            await DiscordClient.UseInteractivityAsync(new InteractivityConfiguration
+            {
+
+            });
 
             await DiscordClient.StartAsync();
             await Task.Delay(-1);

@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -154,6 +155,80 @@ namespace DallarBot.Classes
 
                 return true;            
             }); 
+        }
+
+        public static async Task<bool> PromptUserToConfirm(CommandContext Context, string PromptMessage, bool bDeleteOnComplete = true)
+        {
+            var Interactivity = Context.Client.GetExtension<InteractivityExtension>();
+            await Context.TriggerTypingAsync();
+            DiscordMessage Msg = await Context.RespondAsync(PromptMessage);
+            await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":white_check_mark:"));
+            await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":x:"));
+            ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "✅" || x.Name == "❌", Msg, Context.User);
+
+            if (bDeleteOnComplete)
+            {
+                await Msg.DeleteAsync();
+            }
+
+            if (ReactContext != null && ReactContext.Emoji.Name == "✅")
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static async Task PromptUserToDeleteMessage(CommandContext Context, string Message, bool bDeleteCommandMessage = true)
+        {
+            var Interactivity = Context.Client.GetExtension<InteractivityExtension>();
+            await Context.TriggerTypingAsync();
+            DiscordMessage Msg = await Context.RespondAsync(Message);
+            await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":wastebasket:"));
+            ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "wastebasket" || x.Name == x.Name, Msg, Context.User);
+
+            if (Context.Member != null)
+            {
+                await Msg.DeleteAsync();
+
+                if (bDeleteCommandMessage)
+                {
+                    await Context.Message.DeleteAsync();
+                }
+            }
+        }
+
+        public static async Task<bool> PromptUserToSpendDallarOnCommand(CommandContext Context, decimal Amount)
+        {
+            // If user can't afford command, immediately fail
+            if (!DallarHelpers.CanUserAffordTransactionAmount(Context.User, Amount))
+            {
+                await PromptUserToDeleteMessage(Context, $"You can not afford the cost of the {Context.Command.Name} command. You need {Amount} Dallar.");
+                return false;
+            }
+
+            if (!await PromptUserToConfirm(Context, $"{Context.User.Mention}: Please confirm spending {Amount} Dallar on the `{Context.Command.Name}` command."))
+            {
+                DiscordHelpers.DeleteNonPrivateMessage(Context);
+                return false;
+            }
+
+            return true;
+        }
+
+        public static async Task<bool> AttemptChargeDallarForCommand(CommandContext Context, Decimal Amount)
+        {
+            if (!await PromptUserToSpendDallarOnCommand(Context, Amount))
+            {
+                return false;
+            }
+
+            if (!DallarHelpers.UserPayAmountToFeeAccount(Context.User, Amount))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

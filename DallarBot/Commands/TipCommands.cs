@@ -46,11 +46,6 @@ namespace DallarBot.Commands
         [Description("Sends information on how to deposit Dallar")]
         public async Task GetDallarDeposit(CommandContext Context)
         {
-            if (Context.Member != null)
-            {
-                await Context.TriggerTypingAsync();
-            }
-
             if (Program.Daemon.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string Wallet))
             {
                 DiscordEmbedBuilder EmbedBuilder = new DiscordEmbedBuilder();
@@ -83,8 +78,6 @@ namespace DallarBot.Commands
         [Description("Withdraws Dallar into given Dallar wallet address")]
         public async Task WithdrawFromWalletInstant(CommandContext Context, [Description("Amount of DAL to withdraw. Use 'all' for your entire balance")] string AmountStr, [Description("Dallar Wallet Address to withdraw Dallar to")] string PublicAddress)
         {
-            await Context.TriggerTypingAsync();
-
             // Make sure supplied address is a valid Dallar address
             if (!Program.Daemon.IsAddressValid(PublicAddress))
             {

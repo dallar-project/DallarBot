@@ -58,6 +58,13 @@ namespace DallarBot.Services
         {
             EmbedBuilder.WithDescription($"`{command.Name}`");
 
+            float? Cost = ((CostAttribute)command.CustomAttributes.FirstOrDefault(a => a is CostAttribute))?.GetCost();
+
+            if (Cost.GetValueOrDefault() != 0.0f)
+            {
+                EmbedBuilder.AddField("Cost", $"{Cost.GetValueOrDefault()} Dallar");
+            }
+
             EmbedBuilder.AddField("Description", command.Description);
 
             if (command.Aliases.Count > 0)
