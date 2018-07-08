@@ -207,7 +207,7 @@ namespace DallarBot.Classes
                 return false;
             }
 
-            if (!await PromptUserToConfirm(Context, $"{Context.User.Mention}: Please confirm spending {Amount} Dallar on the `{Context.Command.Name}` command."))
+            if (!await PromptUserToConfirm(Context, $"{Context.User.Mention}: Please confirm spending {Amount} Dallar on the `{Context.Command.Name}` command. This fee will be sent to the server owner hosting Dallar Bot to help with operating costs."))
             {
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return false;
