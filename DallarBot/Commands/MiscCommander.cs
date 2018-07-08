@@ -111,5 +111,17 @@ namespace DallarBot.Commands
                 await Context.RespondAsync(":regional_indicator_g: :regional_indicator_i: :regional_indicator_v: :regional_indicator_e: :a: :regional_indicator_f: :regional_indicator_u: :regional_indicator_c: :regional_indicator_k:");
             }
         }
+
+        [Command("botinfo")]
+        [HelpCategory("Misc")]
+        [Description("Displays some general purpose information about the Dallar Bot")]
+        public async Task BotIfno(CommandContext Context)
+        {
+            await Context.TriggerTypingAsync();
+            DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder();
+            embedBuilder.WithTitle("Dallar Bot Info");
+            embedBuilder.AddField("Bot Statistics", $"{Context.Client.Guilds.Count} Server{(Context.Client.Guilds.Count > 1 ? "s" : "")} across {Context.Client.ShardCount} shard{(Context.Client.ShardCount > 1 ? "s" : "")}.");
+            await DiscordHelpers.PromptUserToDeleteMessage(Context, embedBuilder.Build());
+        }
     }
 }

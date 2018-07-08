@@ -198,6 +198,25 @@ namespace DallarBot.Classes
             }
         }
 
+        public static async Task PromptUserToDeleteMessage(CommandContext Context, DiscordEmbed Embed, bool bDeleteCommandMessage = true)
+        {
+            var Interactivity = Context.Client.GetExtension<InteractivityExtension>();
+            await Context.TriggerTypingAsync();
+            DiscordMessage Msg = await Context.RespondAsync(embed: Embed);
+            await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":wastebasket:"));
+            ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "wastebasket" || x.Name == x.Name, Msg, Context.User);
+
+            if (Context.Member != null)
+            {
+                await Msg.DeleteAsync();
+
+                if (bDeleteCommandMessage)
+                {
+                    await Context.Message.DeleteAsync();
+                }
+            }
+        }
+
         public static async Task<bool> PromptUserToSpendDallarOnCommand(CommandContext Context, decimal Amount)
         {
             // If user can't afford command, immediately fail
