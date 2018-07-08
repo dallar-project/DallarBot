@@ -280,12 +280,12 @@ namespace DallarBot.Commands
                 if (IsRandomSend)
                 {
                     await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL randomly to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
-                    await Context.RespondAsync($"{Context.User.Mention}: You have successfully randomly sent {Member.Mention} {Amount} DAL. ($ {decimal.Round(Amount * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD)");
+                    await Context.RespondAsync($"{Context.User.Mention}: You have successfully randomly sent {Member.Mention} {Amount} DAL. (${decimal.Round(Amount * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD)");
                 }
                 else
                 {
                     await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
-                    await Context.RespondAsync($"{Context.User.Mention}: You have successfully sent {Member.Mention} {Amount} DAL. ($ {decimal.Round(Amount * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD)");
+                    await Context.RespondAsync($"{Context.User.Mention}: You have successfully sent {Member.Mention} {Amount} DAL. (${decimal.Round(Amount * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD)");
                 }
 
                 _ = Context.Message.DeleteAsync();
