@@ -20,7 +20,12 @@ namespace DallarBot.Commands
         public async Task GetAccountBalance(CommandContext Context)
         {
             await Context.TriggerTypingAsync();
-            await Program.DigitalPriceExchange.FetchValueInfo();
+
+            bool bDisplayUSD = false;
+            if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+            {
+                bDisplayUSD = true;
+            }
 
             if (Program.Daemon.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string Wallet))
             {
@@ -28,7 +33,11 @@ namespace DallarBot.Commands
                 decimal pendingBalance = Program.Daemon.GetUnconfirmedAccountBalance(Context.User.Id.ToString());
 
                 string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
-                string resultStr = $"{Context.User.Mention}: Your balance is {balance} DAL (${decimal.Round(balance * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD){pendingBalanceStr}";
+                string resultStr = $"{Context.User.Mention}: Your balance is {balance} DAL";
+                if (bDisplayUSD)
+                {
+                    resultStr += $" (${decimal.Round(balance * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD){pendingBalanceStr}";
+                }
 
                 await LogHandlerService.LogUserActionAsync(Context, $"Checked balance. {balance} DAL with {pendingBalance} DAL pending.");
                 await Context.RespondAsync(resultStr);
@@ -275,17 +284,18 @@ namespace DallarBot.Commands
             // Were we able to successfully send the transaction?
             if (Program.Daemon.SendMinusFees(Context.User.Id.ToString(), ToWallet, Amount))
             {
-                await Program.DigitalPriceExchange.FetchValueInfo();
-
-                if (IsRandomSend)
+                bool bDisplayUSD = false;
+                if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
                 {
-                    await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL randomly to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
-                    await Context.RespondAsync($"{Context.User.Mention}: You have successfully randomly sent {Member.Mention} {Amount} DAL. (${decimal.Round(Amount * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD)");
+                    bDisplayUSD = true;
                 }
-                else
+
+                await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL ${(IsRandomSend ? "randomly " : "")}to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
+                string ReplyStr = $"{Context.User.Mention}: You have successfully ${(IsRandomSend ? "randomly " : "")}sent {Member.Mention} {Amount} DAL.";
+
+                if (bDisplayUSD)
                 {
-                    await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
-                    await Context.RespondAsync($"{Context.User.Mention}: You have successfully sent {Member.Mention} {Amount} DAL. (${decimal.Round(Amount * Program.DigitalPriceExchange.DallarInfo.USDValue.GetValueOrDefault(), 4)} USD)");
+                    ReplyStr += $" {decimal.Round(Amount * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD)";
                 }
 
                 _ = Context.Message.DeleteAsync();
