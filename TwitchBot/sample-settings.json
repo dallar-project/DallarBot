@@ -1,0 +1,18 @@
+{
+	"Twitch":
+	{
+
+	},
+	"Daemon":
+	{
+		"IpAddress": "REPLACE ME",
+		"Port": "REPLACE ME",
+		"Username": "REPLACE ME",
+		"Password": "REPLACE ME",
+	},
+	"Dallar":
+	{
+		"Txfee": 0.0002,
+		"FeeAccount": "REPLACE ME"
+	}
+}

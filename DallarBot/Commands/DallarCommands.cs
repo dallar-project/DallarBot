@@ -1,12 +1,9 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using System;
+﻿using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DallarBot.Services;
 using DallarBot.Classes;
-using DSharpPlus.Entities;
-using System.Collections.Generic;
+using Dallar;
+using DallarBot.Services;
 
 namespace DallarBot.Commands
 {
@@ -24,7 +21,7 @@ namespace DallarBot.Commands
             int BlockCount = Program.DaemonClient.GetBlockCount();
             float Difficulty = Program.DaemonClient.GetDifficulty();
 
-            await LogHandlerService.LogUserActionAsync(Context, $"Fetched block details. {BlockCount} with difficulty {Difficulty}.");
+            LogHandlerExtensions.LogUserAction(Context, $"Fetched block details. {BlockCount} with difficulty {Difficulty}.");
             await Context.RespondAsync($"{Context.User.Mention}: Difficulty for block {BlockCount}: {Difficulty}");
         }
     }

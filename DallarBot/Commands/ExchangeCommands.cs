@@ -5,6 +5,7 @@ using DSharpPlus.CommandsNext;
 using DallarBot.Services;
 using DallarBot.Classes;
 using DSharpPlus.Entities;
+using Dallar;
 
 namespace DallarBot.Commands
 {
@@ -24,7 +25,7 @@ namespace DallarBot.Commands
             {
                 ParsedAmount = Amount[0];
             }
-            await LogHandlerService.LogUserActionAsync(Context, $"Invoked USD command with amount {ParsedAmount}.");
+            LogHandlerExtensions.LogUserAction(Context, $"Invoked USD command with amount {ParsedAmount}.");
 
             if (!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
             {
@@ -57,7 +58,7 @@ namespace DallarBot.Commands
                 ParsedAmount = Amount[0];
             }
 
-            await LogHandlerService.LogUserActionAsync(Context, $"Invoked BTC command with amount {ParsedAmount}.");
+            LogHandlerExtensions.LogUserAction(Context, $"Invoked BTC command with amount {ParsedAmount}.");
 
             if (!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
             {
@@ -92,7 +93,7 @@ namespace DallarBot.Commands
                 ParsedAmount = Amount[0];
             }
 
-            await LogHandlerService.LogUserActionAsync(Context, $"Invoked DAL command with amount {ParsedAmount}.");
+            LogHandlerExtensions.LogUserAction(Context, $"Invoked DAL command with amount {ParsedAmount}.");
 
             if (!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
             {

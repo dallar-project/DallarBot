@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Dallar;
+using System;
+using System.Net;
 using TwitchLib.Client;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
@@ -18,48 +20,110 @@ namespace TestConsole
 
     class Bot
     {
+        static DigitalPriceExchangeService DigitalPriceExchange;
+        static DallarSettingsCollection SettingsCollection;
+        static DaemonClient DaemonClient;
         TwitchClient client;
 
         public Bot()
         {
-            ConnectionCredentials credentials = new ConnectionCredentials("dallarbot", "oauth:gj8uohyt77pk1b3254kdujv99qh7jn");
+            DallarSettingsCollection.FromConfig(Environment.CurrentDirectory + "/settings.json", out SettingsCollection);
+
+            ConnectionCredentials credentials = new ConnectionCredentials(SettingsCollection.Twitch.Username, SettingsCollection.Twitch.AccessToken);
+
+            DigitalPriceExchange = new DigitalPriceExchangeService();
+
+            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port)
+            {
+                credentials = new NetworkCredential(SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password)
+            };
 
             client = new TwitchClient();
-            client.Initialize(credentials, "awesomeallar");
+            client.Initialize(credentials, "awesomeallar", 'd', 'd');
 
             client.OnJoinedChannel += onJoinedChannel;
-            client.OnMessageReceived += onMessageReceived;
-            client.OnWhisperReceived += onWhisperReceived;
-            client.OnNewSubscriber += onNewSubscriber;
             client.OnConnected += Client_OnConnected;
 
-            client.Connect();
+            client.OnChatCommandReceived += onCommandReceived;
 
+            client.Connect();
         }
+
         private void Client_OnConnected(object sender, OnConnectedArgs e)
         {
             Console.WriteLine($"Connected to {e.AutoJoinChannel}");
         }
+
         private void onJoinedChannel(object sender, OnJoinedChannelArgs e)
         {
             Console.WriteLine("Hey guys! I am a bot connected via TwitchLib!");
             client.SendMessage(e.Channel, "Hey guys! I am a bot connected via TwitchLib!");
         }
 
-        private void onMessageReceived(object sender, OnMessageReceivedArgs e)
+
+        private void onCommandReceived(object sender, OnChatCommandReceivedArgs e)
         {
-            client.SendMessage(e.ChatMessage.Channel, e.ChatMessage.Message);
+            switch (e.Command.CommandText)
+            {
+                case "!bal":
+                    CheckBalance(e);
+                    break;
+                case "!deposit":
+                    GetDallarDeposit(e);
+                    break;
+                default:
+                    break;
+            }
         }
-        private void onWhisperReceived(object sender, OnWhisperReceivedArgs e)
+
+        private void CheckBalance(OnChatCommandReceivedArgs e)
         {
-            client.SendWhisper(e.WhisperMessage.Username, "Hey! Whispers are so cool!!");
-        }
-        private void onNewSubscriber(object sender, OnNewSubscriberArgs e)
-        {
-            if (e.Subscriber.SubscriptionPlan == SubscriptionPlan.Prime)
-                client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points! So kind of you to use your Twitch Prime on this channel!");
+            bool bDisplayUSD = false;
+            if (DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+            {
+                bDisplayUSD = true;
+            }
+
+            if (DaemonClient.GetWalletAddressFromAccount("twitch_" + e.Command.ChatMessage.UserId, true, out string Wallet))
+            {
+                decimal balance = DaemonClient.GetRawAccountBalance("twitch_" + e.Command.ChatMessage.UserId);
+                decimal pendingBalance = DaemonClient.GetUnconfirmedAccountBalance("twitch_" + e.Command.ChatMessage.UserId);
+
+                string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
+                string resultStr = $"@{e.Command.ChatMessage.DisplayName}: Your balance is {balance} DAL";
+                if (bDisplayUSD)
+                {
+                    resultStr += $" (${decimal.Round(balance * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD){pendingBalanceStr}";
+                }
+                else
+                {
+                    resultStr += pendingBalanceStr;
+                }
+
+                //LogHandlerExtensions.LogUserAction(Context, $"Checked balance. {balance} DAL with {pendingBalance} DAL pending.");
+                client.SendMessage(e.Command.ChatMessage.Channel, resultStr);
+            }
             else
-                client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points!");
+            {
+                //LogHandlerExtensions.LogUserAction(Context, $"Failed to check balance. Getting wallet address failed.");
+                client.SendMessage(e.Command.ChatMessage.Channel, $"@{e.Command.ChatMessage.DisplayName}: Failed to check balance. Getting wallet address failed. Please contact an Administrator.");
+            }
+        }
+
+        public void GetDallarDeposit(OnChatCommandReceivedArgs e)
+        {
+            if (DaemonClient.GetWalletAddressFromAccount("twitch_" + e.Command.ChatMessage.UserId, true, out string Wallet))
+            {
+                string resultStr = $"Your deposit address is {Wallet}. For help or more information, please visit http://dallar.tv/help";
+                client.SendWhisper(e.Command.ChatMessage.Username, resultStr);
+            }
+            else
+            {
+                //await DiscordHelpers.RespondAsDM(Context, $"{Context.User.Mention}: Failed to fetch your wallet address. Please contact an Administrator.");
+                //LogHandlerExtensions.LogUserAction(Context, $"Failed to fetch deposit info.");
+            }
+
+            //DiscordHelpers.DeleteNonPrivateMessage(Context);
         }
     }
 }

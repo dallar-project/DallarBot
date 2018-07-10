@@ -23,15 +23,15 @@ namespace DallarBot.Commands
         [Cost(1.0f)]
         public async Task FetchDadJoke(CommandContext Context)
         {
-            await LogHandlerService.LogUserActionAsync(Context, "Invoked Dad Joke");
+            LogHandlerExtensions.LogUserAction(Context, "Invoked Dad Joke");
 
             if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
             {
-                await LogHandlerService.LogUserActionAsync(Context, "Failed charged for dad Joke");
+                LogHandlerExtensions.LogUserAction(Context, "Failed charged for dad Joke");
                 return;
             }
 
-            await LogHandlerService.LogUserActionAsync(Context, "Successfully charged for dad Joke");
+            LogHandlerExtensions.LogUserAction(Context, "Successfully charged for dad Joke");
 
             await Context.TriggerTypingAsync();
 
@@ -50,15 +50,15 @@ namespace DallarBot.Commands
         [Cost(1.0f)]
         public async Task FetchAllarJoke(CommandContext Context)
         {
-            await LogHandlerService.LogUserActionAsync(Context, "Invoked Allar Joke");
+            LogHandlerExtensions.LogUserAction(Context, "Invoked Allar Joke");
 
             if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
             {
-                await LogHandlerService.LogUserActionAsync(Context, "Failed charged for Allar Joke");
+                LogHandlerExtensions.LogUserAction(Context, "Failed charged for Allar Joke");
                 return;
             }
 
-            await LogHandlerService.LogUserActionAsync(Context, "Successfully charged for Allar Joke");
+            LogHandlerExtensions.LogUserAction(Context, "Successfully charged for Allar Joke");
 
             await Context.TriggerTypingAsync();
             var httpClient = new HttpClient();
@@ -73,7 +73,7 @@ namespace DallarBot.Commands
             }
             catch
             {
-                await LogHandlerService.LogUserActionAsync(Context, "Failed to perform Allar Joke");
+                LogHandlerExtensions.LogUserAction(Context, "Failed to perform Allar Joke");
                 await Context.RespondAsync($"{Context.User.Mention}: Failed to fetch joke. Please contact an Administrator.");
             }
         }
@@ -85,15 +85,15 @@ namespace DallarBot.Commands
         [Cost(1.0f)]
         public async Task FetchMommaJoke(CommandContext Context)
         {
-            await LogHandlerService.LogUserActionAsync(Context, "Invoked mom joke.");
+            LogHandlerExtensions.LogUserAction(Context, "Invoked mom joke.");
 
             if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
             {
-                await LogHandlerService.LogUserActionAsync(Context, "Failed charged for mom Joke");
+                LogHandlerExtensions.LogUserAction(Context, "Failed charged for mom Joke");
                 return;
             }
 
-            await LogHandlerService.LogUserActionAsync(Context, "Successfully charged for mom Joke");
+            LogHandlerExtensions.LogUserAction(Context, "Successfully charged for mom Joke");
 
             await Context.TriggerTypingAsync();
             await Context.RespondAsync($"{Context.User.Mention}: {Program.YoMommaJokes.GetRandomYoMommaJoke()}");
@@ -106,7 +106,7 @@ namespace DallarBot.Commands
         {
             if (DiscordHelpers.IsUserAdmin(Context) || DiscordHelpers.IsUserModerator(Context) || DiscordHelpers.IsUserDallarDevTeam(Context))
             {
-                await LogHandlerService.LogUserActionAsync(Context, "Invoked GiveAFuck");
+                LogHandlerExtensions.LogUserAction(Context, "Invoked GiveAFuck");
                 await Context.TriggerTypingAsync();
                 await Context.RespondAsync(":regional_indicator_g: :regional_indicator_i: :regional_indicator_v: :regional_indicator_e: :a: :regional_indicator_f: :regional_indicator_u: :regional_indicator_c: :regional_indicator_k:");
             }

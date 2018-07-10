@@ -1,5 +1,5 @@
 /* Fetches json data from the DigialPrice exchange. */
-namespace DallarBot.Services
+namespace Dallar
 {
     using Newtonsoft.Json;
     using System;
@@ -51,7 +51,7 @@ namespace DallarBot.Services
         {
             if (DateTime.Compare(LastFetchTime, DateTime.Now.AddSeconds(-9.0d)) < 0)
             {
-                await LogHandlerService.LogAsync("Fetching DigitalPrice Exchange Info.");
+                LogHandlerService.Log("Fetching DigitalPrice Exchange Info.");
 
                 var client = new WebClient();
                 var DigitalPriceJSON = await client.DownloadStringTaskAsync("https://digitalprice.io/markets/get-currency-summary?currency=BALANCE_COIN_BITCOIN");
@@ -76,7 +76,7 @@ namespace DallarBot.Services
                 }
                 catch (Exception e)
                 {
-                    await LogHandlerService.LogAsync($"Failed to get DigitalPrice Exchange Info: {e.ToString()}");
+                    LogHandlerService.Log($"Failed to get DigitalPrice Exchange Info: {e.ToString()}");
                 }                
             }
         }
@@ -99,7 +99,5 @@ namespace DallarBot.Services
             PriceInfo = null;
             return false;
         }
-    }
-
-    
+    }    
 }

@@ -26,14 +26,16 @@ namespace Dallar
 
     public class TwitchSettings
     {
-
+        public string Username { get; set; }
+        public string AccessToken { get; set; }
     }
 
     public class DallarSettingsCollection
     {
-        public DiscordSettings Discord { get; set; }
         public DaemonSettings Daemon { get; set; }
         public DallarSettings Dallar { get; set; }
+        public DiscordSettings Discord { get; set; }
+        public TwitchSettings Twitch { get; set; }
 
         public DallarSettingsCollection()
         {

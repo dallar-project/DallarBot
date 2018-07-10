@@ -12,7 +12,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchBot", "TwitchBot\Twit
 		{9E523683-5531-4F7A-93A1-0EB02FF02054} = {9E523683-5531-4F7A-93A1-0EB02FF02054}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DallarSettings", "DallarSettings\DallarSettings.csproj", "{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DallarCommon", "DallarSettings\DallarCommon.csproj", "{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bots", "Bots", "{5D06A452-839D-4812-A19F-D08A2A9678E7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{37E69240-277C-4BFD-A58A-020357AF9B7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +43,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4192C37D-C1FE-420B-8BD8-2A38E178C1D9} = {5D06A452-839D-4812-A19F-D08A2A9678E7}
+		{9E523683-5531-4F7A-93A1-0EB02FF02054} = {37E69240-277C-4BFD-A58A-020357AF9B7B}
+		{F7270302-0216-49C6-820E-63A9C30C69A5} = {5D06A452-839D-4812-A19F-D08A2A9678E7}
+		{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480} = {37E69240-277C-4BFD-A58A-020357AF9B7B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {809599BD-9E99-4B86-8387-7ECCA46F4456}

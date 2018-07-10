@@ -7,6 +7,7 @@ using DallarBot.Services;
 using DallarBot.Classes;
 using DSharpPlus.Entities;
 using System.Collections.Generic;
+using Dallar;
 
 namespace DallarBot.Commands
 {
@@ -43,12 +44,12 @@ namespace DallarBot.Commands
                     resultStr += pendingBalanceStr;
                 }
 
-                await LogHandlerService.LogUserActionAsync(Context, $"Checked balance. {balance} DAL with {pendingBalance} DAL pending.");
+                LogHandlerExtensions.LogUserAction(Context, $"Checked balance. {balance} DAL with {pendingBalance} DAL pending.");
                 await Context.RespondAsync(resultStr);
             }
             else
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Failed to check balance. Getting wallet address failed.");
+                LogHandlerExtensions.LogUserAction(Context, $"Failed to check balance. Getting wallet address failed.");
                 await Context.RespondAsync($"{Context.User.Mention}: Failed to check balance. Getting wallet address failed. Please contact an Administrator.");
             }
 
@@ -75,13 +76,13 @@ namespace DallarBot.Commands
 
                 EmbedBuilder.WithImageUrl($"https://api.qrserver.com/v1/create-qr-code/?data=dallar:{Wallet}&qzone=2");
 
-                await LogHandlerService.LogUserActionAsync(Context, $"Fetched deposit info.");
+                LogHandlerExtensions.LogUserAction(Context, $"Fetched deposit info.");
                 await DiscordHelpers.RespondAsDM(Context, EmbedBuilder.Build());
             }
             else
             {
                 await DiscordHelpers.RespondAsDM(Context, $"{Context.User.Mention}: Failed to fetch your wallet address. Please contact an Administrator.");
-                await LogHandlerService.LogUserActionAsync(Context, $"Failed to fetch deposit info.");
+                LogHandlerExtensions.LogUserAction(Context, $"Failed to fetch deposit info.");
             }
 
             DiscordHelpers.DeleteNonPrivateMessage(Context);
@@ -96,7 +97,7 @@ namespace DallarBot.Commands
             if (!Program.DaemonClient.IsAddressValid(PublicAddress))
             {
                 // handle invalid public address
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw but PublicAddress ({PublicAddress}) is invalid.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw but PublicAddress ({PublicAddress}) is invalid.");
                 await Context.RespondAsync($"{Context.User.Mention}: Seems like you tried withdrawing Dallar to an invalid Dallar address. You supplied: {PublicAddress}");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
@@ -106,7 +107,7 @@ namespace DallarBot.Commands
             if (!DallarHelpers.TryParseUserAmountString(Context.User, AmountStr, out decimal Amount))
             {
                 // handle amount parse fail
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} but value could not be parsed.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} but value could not be parsed.");
                 await Context.RespondAsync($"{Context.User.Mention}: The amount you tried to withdraw can not be parsed as a number. You tried withdrawing {Amount} DAL.");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
@@ -115,7 +116,7 @@ namespace DallarBot.Commands
             // Make sure Amount is greater than zero
             if (Amount <= 0)
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} but value is invalid.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} but value is invalid.");
                 await Context.RespondAsync($"{Context.User.Mention}: You can not withdraw 0 or less Dallar. You tried withdrawing {Amount} DAL.");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
@@ -125,7 +126,7 @@ namespace DallarBot.Commands
             if (!DallarHelpers.CanUserAffordTransactionAmount(Context.User, Amount))
             {
                 // user can not afford requested withdraw amount
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({Program.DaemonClient.GetRawAccountBalance(Context.User.Id.ToString())})");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({Program.DaemonClient.GetRawAccountBalance(Context.User.Id.ToString())})");
                 await Context.RespondAsync($"{Context.User.Mention}: Looks like you don't have enough funds withdraw {Amount} DAL! Remember, there is a {Program.SettingsCollection.Dallar.Txfee} DAL fee for performing bot transactions.");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
@@ -138,12 +139,12 @@ namespace DallarBot.Commands
                 if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), PublicAddress, Amount, Program.SettingsCollection.Dallar.Txfee, Program.SettingsCollection.Dallar.FeeAccount))
                 {
                     // Successfully withdrew
-                    await LogHandlerService.LogUserActionAsync(Context, $"Successfully withdrew {Amount} from wallet ({Wallet}).");
+                    LogHandlerExtensions.LogUserAction(Context, $"Successfully withdrew {Amount} from wallet ({Wallet}).");
                     await Context.RespondAsync($"You have successfully withdrawn {Amount} DAL" + (Context.Member == null ? "." : $" to address {PublicAddress}."));
                 }
                 else
                 {   // unable to send dallar
-                    await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} from wallet ({Wallet}) but daemon failed to send transaction.");
+                    LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} from wallet ({Wallet}) but daemon failed to send transaction.");
                     await Context.RespondAsync("Something went wrong trying to send your Dallar through the Dallar daemon. (Please contact the Administrators!)");
                     DiscordHelpers.DeleteNonPrivateMessage(Context);
                     return;
@@ -151,7 +152,7 @@ namespace DallarBot.Commands
             }
             else
             {   // unable to fetch user's wallet
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} but bot could not determine user's wallet.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} but bot could not determine user's wallet.");
                 await Context.RespondAsync("Something went wrong trying to get your DallarBot Dallar Address. (Please contact the Administrators!)");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
@@ -201,7 +202,7 @@ namespace DallarBot.Commands
         {
             await Context.TriggerTypingAsync();
 
-            await LogHandlerService.LogUserActionAsync(Context, $"Invoked sending {Amount} to a random user with minimum status {MinimumStatus.ToString()}.");
+            LogHandlerExtensions.LogUserAction(Context, $"Invoked sending {Amount} to a random user with minimum status {MinimumStatus.ToString()}.");
 
             IEnumerable<DiscordMember> Members = DiscordHelpers.GetHumansInContextGuild(Context, true, MinimumStatus);
             int randomIndex = Program.RandomManager.GetRandomInteger(0, Members.Count() - 1);
@@ -213,7 +214,7 @@ namespace DallarBot.Commands
             }
             else
             {   // failed to get random member?
-                await LogHandlerService.LogUserActionAsync(Context, $"Failed to get a random user from the guild.");
+                LogHandlerExtensions.LogUserAction(Context, $"Failed to get a random user from the guild.");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot has failed to get a random user from the guild. Please contact an Administrator.");
                 _ = Context.Message.DeleteAsync();
             }
@@ -228,14 +229,14 @@ namespace DallarBot.Commands
             // Error out if this is a private message
             if (Context.Member == null)
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar{RandomUserString} but user not in a guild.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar{RandomUserString} but user not in a guild.");
                 await Context.RespondAsync($"{Context.User.Mention}: You must be in a Discord server with DallarBot to give to others.");
                 return;
             }
 
             if (!DallarHelpers.TryParseUserAmountString(Context.User, AmountStr, out decimal Amount))
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar but could not parse amount: {AmountStr}");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar but could not parse amount: {AmountStr}");
                 await Context.RespondAsync($"{Context.User.Mention}: Could not parse amount.");
                 return;
             }
@@ -243,7 +244,7 @@ namespace DallarBot.Commands
             // Error out if trying to send an invalid amount
             if (Amount <= 0)
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar{RandomUserString} but sender requested something less than or equal to zero.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar{RandomUserString} but sender requested something less than or equal to zero.");
                 await Context.RespondAsync($"{Context.User.Mention}: You can not send negative or zero Dallars.");
                 _ = Context.Message.DeleteAsync();
                 return;
@@ -252,7 +253,7 @@ namespace DallarBot.Commands
             // Error out if user is trying to send to themselves
             if (Context.User.Id == Member.Id)
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar to themselves.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar to themselves.");
                 await Context.RespondAsync($"{Context.User.Mention}: You can not send Dallar to yourself.");
                 _ = Context.Message.DeleteAsync();
                 return;
@@ -261,7 +262,7 @@ namespace DallarBot.Commands
             // Failed to get senders wallet?
             if (!Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string FromWallet))
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar{RandomUserString} but can not get sender's wallet.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar{RandomUserString} but can not get sender's wallet.");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot failed to get your wallet. Please contact an Administrator.");
                 _ = Context.Message.DeleteAsync();
                 return;
@@ -270,7 +271,7 @@ namespace DallarBot.Commands
             // Failed to get receiver's wallet?
             if (!Program.DaemonClient.GetWalletAddressFromAccount(Member.Id.ToString(), true, out string ToWallet))
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar{RandomUserString} but can not get receiver's wallet. Receiver: {Member.Id.ToString()} ({Member.Username.ToString()})");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar{RandomUserString} but can not get receiver's wallet. Receiver: {Member.Id.ToString()} ({Member.Username.ToString()})");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot failed to get your wallet. Please contact an Administrator.");
                 _ = Context.Message.DeleteAsync();
                 return;
@@ -279,7 +280,7 @@ namespace DallarBot.Commands
             // Can user afford transaction?
             if (!DallarHelpers.CanUserAffordTransactionAmount(Context.User, Amount))
             {
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to send {Amount} DAL{RandomUserString} but could not afford it.");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to send {Amount} DAL{RandomUserString} but could not afford it.");
                 await Context.RespondAsync($"{Context.User.Mention}: You do not have {Amount} DAL to send.");
                 _ = Context.Message.DeleteAsync();
                 return;
@@ -294,7 +295,7 @@ namespace DallarBot.Commands
                     bDisplayUSD = true;
                 }
 
-                await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL ${(IsRandomSend ? "randomly " : "")}to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
+                LogHandlerExtensions.LogUserAction(Context, $"Sent {Amount} DAL ${(IsRandomSend ? "randomly " : "")}to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
                 string ReplyStr = $"{Context.User.Mention}: You have successfully {(IsRandomSend ? "randomly " : "")}sent {Member.Mention} {Amount} DAL.";
 
                 if (bDisplayUSD)
@@ -308,7 +309,7 @@ namespace DallarBot.Commands
             }
             else
             {   // sending failed?
-                await LogHandlerService.LogUserActionAsync(Context, $"Failed to have daemon send{RandomUserString} {Amount} DAL to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
+                LogHandlerExtensions.LogUserAction(Context, $"Failed to have daemon send{RandomUserString} {Amount} DAL to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot has failed to send{RandomUserString} {Amount} DAL. Please contact an Administrator.");
                 _ = Context.Message.DeleteAsync();
                 return;

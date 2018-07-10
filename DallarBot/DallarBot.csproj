@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="sample-settings.json" />
     <None Remove="settings.json" />
   </ItemGroup>
 
@@ -22,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DallarDaemonClient\DallarDaemonClient.csproj" />
-    <ProjectReference Include="..\DallarSettings\DallarSettings.csproj" />
+    <ProjectReference Include="..\DallarSettings\DallarCommon.csproj" />
   </ItemGroup>
 
 </Project>

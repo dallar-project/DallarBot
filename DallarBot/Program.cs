@@ -59,7 +59,7 @@ namespace DallarBot
                 LogLevel = LogLevel.Debug
             });
 
-            DiscordClient.DebugLogger.LogMessageReceived += LogHandlerService.DiscordLogMessageReceived;
+            DiscordClient.DebugLogger.LogMessageReceived += LogHandlerExtensions.DiscordLogMessageReceived;
 
             DiscordClient.MessageCreated += async e =>
             {
@@ -97,7 +97,7 @@ namespace DallarBot
                     {
                         return;
                     }
-                    await LogHandlerService.LogUserActionAsync(e.Context, "Failed to invoke " + e.Command.ToString());
+                    LogHandlerExtensions.LogUserAction(e.Context, "Failed to invoke " + e.Command.ToString());
 
                     DiscordChannel Channel = e.Context.Channel;
                     if (e.Context.Member != null)
