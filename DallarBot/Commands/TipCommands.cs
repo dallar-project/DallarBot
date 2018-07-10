@@ -38,6 +38,10 @@ namespace DallarBot.Commands
                 {
                     resultStr += $" (${decimal.Round(balance * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD){pendingBalanceStr}";
                 }
+                else
+                {
+                    resultStr += pendingBalanceStr;
+                }
 
                 await LogHandlerService.LogUserActionAsync(Context, $"Checked balance. {balance} DAL with {pendingBalance} DAL pending.");
                 await Context.RespondAsync(resultStr);
@@ -291,13 +295,14 @@ namespace DallarBot.Commands
                 }
 
                 await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL ${(IsRandomSend ? "randomly " : "")}to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
-                string ReplyStr = $"{Context.User.Mention}: You have successfully ${(IsRandomSend ? "randomly " : "")}sent {Member.Mention} {Amount} DAL.";
+                string ReplyStr = $"{Context.User.Mention}: You have successfully {(IsRandomSend ? "randomly " : "")}sent {Member.Mention} {Amount} DAL.";
 
                 if (bDisplayUSD)
                 {
                     ReplyStr += $" {decimal.Round(Amount * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD)";
                 }
 
+                await Context.RespondAsync(ReplyStr);
                 _ = Context.Message.DeleteAsync();
                 return;
             }
