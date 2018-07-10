@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DallarDaemonClient\DallarDaemonClient.csproj" />
+    <ProjectReference Include="..\DallarSettings\DallarSettings.csproj" />
   </ItemGroup>
 
 </Project>

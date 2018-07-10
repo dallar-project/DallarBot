@@ -13,3 +13,11 @@ log.txt
 DallarDaemonClient/bin/
 
 DallarDaemonClient/obj/
+
+TwitchBot/bin/
+
+TwitchBot/obj/
+
+DallarSettings/bin/
+
+DallarSettings/obj/

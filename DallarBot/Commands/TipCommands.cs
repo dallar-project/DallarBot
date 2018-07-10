@@ -69,7 +69,7 @@ namespace DallarBot.Commands
                     "Dallar Bot does not access anyone's wallets directly in order to protect everyone's privacy.");
 
                 EmbedBuilder.AddField("Warning About Storage", "Dallar Bot should not be used as a long term storage for your Dallar. Dallar Bot is only accessible through Discord and if the Bot or Discord are down for any reason, you will *not* be able to access your stored Dallar.");
-                EmbedBuilder.AddField("Dallar Bot Fees", $"All transactions with Dallar Bot incur a flat {Program.SettingsHandler.Dallar.Txfee} DAL fee to cover the Dallar blockchain transaction fees as well as funding and maintenance costs sent to the Dallar Bot server hoster.");
+                EmbedBuilder.AddField("Dallar Bot Fees", $"All transactions with Dallar Bot incur a flat {Program.SettingsCollection.Dallar.Txfee} DAL fee to cover the Dallar blockchain transaction fees as well as funding and maintenance costs sent to the Dallar Bot server hoster.");
                 EmbedBuilder.AddField("Blockchain Transactions", $"Dallar Bot uses the blockchain to keep track of its transactions, meaning your transactions will require 6 confirmation blocks before they are completed. This should take approximately 5 to 10 minutes under normal Dallar network conditions.");
                 EmbedBuilder.AddField("Depositing", $"You can deposit Dallar into your Dallar Bot balance by sending Dallar to this address generated specifically for you: `{Wallet}`");
 
@@ -126,7 +126,7 @@ namespace DallarBot.Commands
             {
                 // user can not afford requested withdraw amount
                 await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({Program.DaemonClient.GetRawAccountBalance(Context.User.Id.ToString())})");
-                await Context.RespondAsync($"{Context.User.Mention}: Looks like you don't have enough funds withdraw {Amount} DAL! Remember, there is a {Program.SettingsHandler.Dallar.Txfee} DAL fee for performing bot transactions.");
+                await Context.RespondAsync($"{Context.User.Mention}: Looks like you don't have enough funds withdraw {Amount} DAL! Remember, there is a {Program.SettingsCollection.Dallar.Txfee} DAL fee for performing bot transactions.");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
             }
@@ -135,7 +135,7 @@ namespace DallarBot.Commands
             // Fetch user's wallet
             if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
             {
-                if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), PublicAddress, Amount, Program.SettingsHandler.Dallar.Txfee, Program.SettingsHandler.Dallar.FeeAccount))
+                if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), PublicAddress, Amount, Program.SettingsCollection.Dallar.Txfee, Program.SettingsCollection.Dallar.FeeAccount))
                 {
                     // Successfully withdrew
                     await LogHandlerService.LogUserActionAsync(Context, $"Successfully withdrew {Amount} from wallet ({Wallet}).");
@@ -286,7 +286,7 @@ namespace DallarBot.Commands
             }
 
             // Were we able to successfully send the transaction?
-            if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), ToWallet, Amount, Program.SettingsHandler.Dallar.Txfee, Program.SettingsHandler.Dallar.FeeAccount))
+            if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), ToWallet, Amount, Program.SettingsCollection.Dallar.Txfee, Program.SettingsCollection.Dallar.FeeAccount))
             {
                 bool bDisplayUSD = false;
                 if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))

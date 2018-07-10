@@ -16,7 +16,7 @@ namespace DallarBot
     public class Program
     {
         static DiscordShardedClient DiscordClient;
-        public static SettingsHandlerService SettingsHandler;
+        public static DallarSettingsCollection SettingsCollection;
         public static DaemonClient DaemonClient;
         public static DigitalPriceExchangeService DigitalPriceExchange;
         public static RandomManagerService RandomManager;
@@ -24,18 +24,18 @@ namespace DallarBot
 
         static void Main(string[] args)
         {
-            SettingsHandler = SettingsHandlerService.FromConfig();
+            DallarSettingsCollection.FromConfig(Environment.CurrentDirectory + "/settings.json", out SettingsCollection);
             DigitalPriceExchange = new DigitalPriceExchangeService();
             RandomManager = new RandomManagerService();
             YoMommaJokes = new YoMommaJokeService();
 
-            DaemonClient = new DaemonClient(SettingsHandler.Daemon.IpAddress + ":" + SettingsHandler.Daemon.Port)
+            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port)
             {
-                credentials = new NetworkCredential(SettingsHandler.Daemon.Username, SettingsHandler.Daemon.Password)
+                credentials = new NetworkCredential(SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password)
             };
 
             // Ensure fee account is already created
-            DaemonClient.GetWalletAddressFromAccount(SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
+            DaemonClient.GetWalletAddressFromAccount(SettingsCollection.Dallar.FeeAccount, true, out string toWallet);
 
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
         }
@@ -54,7 +54,7 @@ namespace DallarBot
 
             DiscordClient = new DiscordShardedClient(new DiscordConfiguration
             {
-                Token = SettingsHandler.Discord.BotToken,
+                Token = SettingsCollection.Discord.BotToken,
                 TokenType = TokenType.Bot,
                 LogLevel = LogLevel.Debug
             });
