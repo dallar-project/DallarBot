@@ -6,16 +6,15 @@ using System.IO;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using DallarBot.Classes;
 
-namespace DallarBot.Services
+namespace Dallar
 {
-    public class DaemonService
+    public class DaemonClient
     {
         public Uri uri;
         public ICredentials credentials;
 
-        public DaemonService(string _uri)
+        public DaemonClient(string _uri)
         {
             var uriBuilder = new UriBuilder(_uri);
             uri = uriBuilder.Uri;
@@ -70,9 +69,9 @@ namespace DallarBot.Services
             }
         }
 
-        public string CreateNewAddressForUser(string accountName)
+        public string CreateNewAddressForUser(string Account)
         {
-            return InvokeMethod("getnewaddress", accountName)["result"].ToString();
+            return InvokeMethod("getnewaddress", Account)["result"].ToString();
         }
 
         public float GetDifficulty()
@@ -95,31 +94,31 @@ namespace DallarBot.Services
             return InvokeMethod("getmininginfo")["result"] as JObject;
         }
 
-        public decimal GetRawAccountBalance(string account)
+        public decimal GetRawAccountBalance(string Account)
         {
-            return (decimal)InvokeMethod("getbalance", account, 6)["result"];
+            return (decimal)InvokeMethod("getbalance", Account, 6)["result"];
         }
 
-        public decimal GetUnconfirmedAccountBalance(string account)
+        public decimal GetUnconfirmedAccountBalance(string Account)
         {
-            decimal pending = (decimal)InvokeMethod("getbalance", account, 0)["result"];
-            return pending - GetRawAccountBalance(account);
+            decimal pending = (decimal)InvokeMethod("getbalance", Account, 0)["result"];
+            return pending - GetRawAccountBalance(Account);
         }
 
-        public string GetAccountAddress(string account)
+        public string GetAccountAddress(string Account)
         {
-            return InvokeMethod("getaccountaddress", account)["result"].ToString();
+            return InvokeMethod("getaccountaddress", Account)["result"].ToString();
         }
 
-        public string GetAccountAddressSubtle(string account)
+        public string GetAccountAddressSubtle(string Account)
         {
-            List<String> list = InvokeMethod("getaddressesbyaccount", account)["result"].ToObject<List<String>>();
+            List<String> list = InvokeMethod("getaddressesbyaccount", Account)["result"].ToObject<List<String>>();
             return list[0];
         }
 
-        public bool DoesAccountExist(string account)
+        public bool DoesAccountExist(string Account)
         {
-            List<String> list = InvokeMethod("getaddressesbyaccount", account)["result"].ToObject<List<String>>();
+            List<String> list = InvokeMethod("getaddressesbyaccount", Account)["result"].ToObject<List<String>>();
             return (list.Count >= 1);
         }
 
@@ -139,15 +138,13 @@ namespace DallarBot.Services
             return (TransactionID != null && TransactionID != "");
         }
 
-        public bool SendMinusFees(string fromAccount, string toWallet, decimal amount)
+        public bool SendMinusFees(string fromAccount, string toWallet, decimal amount, decimal Fee, string FeeAccount)
         {
-            DallarHelpers.GetTXFeeAndAccount(out decimal TxFee, out string FeeAccount);
-
             string txid = SendToAddress(fromAccount, toWallet, amount);
             if (txid != null || txid != "")
             {
                 decimal transactionFee = GetTransactionFee(txid);
-                decimal remainder = transactionFee + TxFee;
+                decimal remainder = transactionFee + Fee;
                 return MoveToAddress(fromAccount, FeeAccount, remainder);
             }
             return false;
@@ -158,19 +155,19 @@ namespace DallarBot.Services
             return (int)InvokeMethod("getblockcount")["result"];
         }
 
-        public bool GetWalletAddressFromUser(string userID, bool createIfNotFound, out string walletAddress)
+        public bool GetWalletAddressFromAccount(string Account, bool createIfNotFound, out string walletAddress)
         {
             walletAddress = "";
-            if (DoesAccountExist(userID))
+            if (DoesAccountExist(Account))
             {
-                walletAddress = GetAccountAddressSubtle(userID);
+                walletAddress = GetAccountAddressSubtle(Account);
                 return true;
             }
             else
             {
                 if (createIfNotFound)
                 {
-                    walletAddress = CreateNewAddressForUser(userID);
+                    walletAddress = CreateNewAddressForUser(Account);
                     return true;
                 }
                 else

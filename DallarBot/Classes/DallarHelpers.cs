@@ -15,7 +15,7 @@ namespace DallarBot.Classes
 
         public static bool CanUserAffordTransactionAmount(DiscordUser User, decimal Amount)
         {
-            decimal balance = Program.Daemon.GetRawAccountBalance(User.Id.ToString());
+            decimal balance = Program.DaemonClient.GetRawAccountBalance(User.Id.ToString());
             decimal txfee = Program.SettingsHandler.Dallar.Txfee;
 
             if (Amount + txfee > balance)
@@ -30,7 +30,7 @@ namespace DallarBot.Classes
         {
             if (AmountStr == "all")
             {
-                decimal balance = Program.Daemon.GetRawAccountBalance(User.Id.ToString());
+                decimal balance = Program.DaemonClient.GetRawAccountBalance(User.Id.ToString());
                 decimal txfee = Program.SettingsHandler.Dallar.Txfee;
 
                 Amount = balance - txfee;
@@ -48,7 +48,7 @@ namespace DallarBot.Classes
                 return false;
             }
 
-            if (!Program.Daemon.SendMinusFees(User.Id.ToString(), Program.Daemon.GetAccountAddress(Program.SettingsHandler.Dallar.FeeAccount), Amount))
+            if (!Program.DaemonClient.SendMinusFees(User.Id.ToString(), Program.DaemonClient.GetAccountAddress(Program.SettingsHandler.Dallar.FeeAccount), Amount, Program.SettingsHandler.Dallar.Txfee, Program.SettingsHandler.Dallar.FeeAccount))
             {
                 return false;
             }

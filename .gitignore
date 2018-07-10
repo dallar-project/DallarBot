@@ -9,3 +9,7 @@ DallarBot/.vs
 
 DallarBot/settings\.json
 log.txt
+
+DallarDaemonClient/bin/
+
+DallarDaemonClient/obj/

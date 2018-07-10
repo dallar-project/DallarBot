@@ -21,8 +21,8 @@ namespace DallarBot.Commands
         {
             await Context.TriggerTypingAsync();
 
-            int BlockCount = Program.Daemon.GetBlockCount();
-            float Difficulty = Program.Daemon.GetDifficulty();
+            int BlockCount = Program.DaemonClient.GetBlockCount();
+            float Difficulty = Program.DaemonClient.GetDifficulty();
 
             await LogHandlerService.LogUserActionAsync(Context, $"Fetched block details. {BlockCount} with difficulty {Difficulty}.");
             await Context.RespondAsync($"{Context.User.Mention}: Difficulty for block {BlockCount}: {Difficulty}");

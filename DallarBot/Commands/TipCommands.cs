@@ -27,10 +27,10 @@ namespace DallarBot.Commands
                 bDisplayUSD = true;
             }
 
-            if (Program.Daemon.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string Wallet))
+            if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
             {
-                decimal balance = Program.Daemon.GetRawAccountBalance(Context.User.Id.ToString());
-                decimal pendingBalance = Program.Daemon.GetUnconfirmedAccountBalance(Context.User.Id.ToString());
+                decimal balance = Program.DaemonClient.GetRawAccountBalance(Context.User.Id.ToString());
+                decimal pendingBalance = Program.DaemonClient.GetUnconfirmedAccountBalance(Context.User.Id.ToString());
 
                 string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
                 string resultStr = $"{Context.User.Mention}: Your balance is {balance} DAL";
@@ -60,7 +60,7 @@ namespace DallarBot.Commands
         [Description("Sends information on how to deposit Dallar")]
         public async Task GetDallarDeposit(CommandContext Context)
         {
-            if (Program.Daemon.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string Wallet))
+            if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
             {
                 DiscordEmbedBuilder EmbedBuilder = new DiscordEmbedBuilder();
 
@@ -93,7 +93,7 @@ namespace DallarBot.Commands
         public async Task WithdrawFromWalletInstant(CommandContext Context, [Description("Amount of DAL to withdraw. Use 'all' for your entire balance")] string AmountStr, [Description("Dallar Wallet Address to withdraw Dallar to")] string PublicAddress)
         {
             // Make sure supplied address is a valid Dallar address
-            if (!Program.Daemon.IsAddressValid(PublicAddress))
+            if (!Program.DaemonClient.IsAddressValid(PublicAddress))
             {
                 // handle invalid public address
                 await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw but PublicAddress ({PublicAddress}) is invalid.");
@@ -125,7 +125,7 @@ namespace DallarBot.Commands
             if (!DallarHelpers.CanUserAffordTransactionAmount(Context.User, Amount))
             {
                 // user can not afford requested withdraw amount
-                await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({Program.Daemon.GetRawAccountBalance(Context.User.Id.ToString())})");
+                await LogHandlerService.LogUserActionAsync(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({Program.DaemonClient.GetRawAccountBalance(Context.User.Id.ToString())})");
                 await Context.RespondAsync($"{Context.User.Mention}: Looks like you don't have enough funds withdraw {Amount} DAL! Remember, there is a {Program.SettingsHandler.Dallar.Txfee} DAL fee for performing bot transactions.");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
@@ -133,9 +133,9 @@ namespace DallarBot.Commands
 
             // Amount should be guaranteed a good value to withdraw
             // Fetch user's wallet
-            if (Program.Daemon.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string Wallet))
+            if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
             {
-                if (Program.Daemon.SendMinusFees(Context.User.Id.ToString(), PublicAddress, Amount))
+                if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), PublicAddress, Amount, Program.SettingsHandler.Dallar.Txfee, Program.SettingsHandler.Dallar.FeeAccount))
                 {
                     // Successfully withdrew
                     await LogHandlerService.LogUserActionAsync(Context, $"Successfully withdrew {Amount} from wallet ({Wallet}).");
@@ -259,7 +259,7 @@ namespace DallarBot.Commands
             }
 
             // Failed to get senders wallet?
-            if (!Program.Daemon.GetWalletAddressFromUser(Context.User.Id.ToString(), true, out string FromWallet))
+            if (!Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string FromWallet))
             {
                 await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar{RandomUserString} but can not get sender's wallet.");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot failed to get your wallet. Please contact an Administrator.");
@@ -268,7 +268,7 @@ namespace DallarBot.Commands
             }
 
             // Failed to get receiver's wallet?
-            if (!Program.Daemon.GetWalletAddressFromUser(Member.Id.ToString(), true, out string ToWallet))
+            if (!Program.DaemonClient.GetWalletAddressFromAccount(Member.Id.ToString(), true, out string ToWallet))
             {
                 await LogHandlerService.LogUserActionAsync(Context, $"Tried to send Dallar{RandomUserString} but can not get receiver's wallet. Receiver: {Member.Id.ToString()} ({Member.Username.ToString()})");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot failed to get your wallet. Please contact an Administrator.");
@@ -286,7 +286,7 @@ namespace DallarBot.Commands
             }
 
             // Were we able to successfully send the transaction?
-            if (Program.Daemon.SendMinusFees(Context.User.Id.ToString(), ToWallet, Amount))
+            if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), ToWallet, Amount, Program.SettingsHandler.Dallar.Txfee, Program.SettingsHandler.Dallar.FeeAccount))
             {
                 bool bDisplayUSD = false;
                 if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))

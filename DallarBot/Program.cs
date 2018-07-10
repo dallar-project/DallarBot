@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using Dallar;
 using DallarBot.Classes;
 using DallarBot.Commands;
 using DallarBot.Services;
@@ -16,7 +17,7 @@ namespace DallarBot
     {
         static DiscordShardedClient DiscordClient;
         public static SettingsHandlerService SettingsHandler;
-        public static DaemonService Daemon;
+        public static DaemonClient DaemonClient;
         public static DigitalPriceExchangeService DigitalPriceExchange;
         public static RandomManagerService RandomManager;
         public static YoMommaJokeService YoMommaJokes;
@@ -28,13 +29,13 @@ namespace DallarBot
             RandomManager = new RandomManagerService();
             YoMommaJokes = new YoMommaJokeService();
 
-            Daemon = new DaemonService(SettingsHandler.Daemon.IpAddress + ":" + SettingsHandler.Daemon.Port)
+            DaemonClient = new DaemonClient(SettingsHandler.Daemon.IpAddress + ":" + SettingsHandler.Daemon.Port)
             {
                 credentials = new NetworkCredential(SettingsHandler.Daemon.Username, SettingsHandler.Daemon.Password)
             };
 
             // Ensure fee account is already created
-            Daemon.GetWalletAddressFromUser(SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
+            DaemonClient.GetWalletAddressFromAccount(SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
 
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
         }
