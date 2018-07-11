@@ -39,7 +39,7 @@ namespace DallarBot.Services
         {
             LastFetchTime = new DateTime();
             FetchValueInfo().GetAwaiter().GetResult();
-            FetchTimer = new Timer(FetchTimerInvoke, null, 10, Timeout.Infinite);
+            FetchTimer = new Timer(FetchTimerInvoke, null, 10000, 10000);
         }
 
         protected void FetchTimerInvoke(object state)

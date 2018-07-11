@@ -17,7 +17,14 @@ namespace DallarBot.Services
         {
             string output = $"[{DateTime.Now.ToString()}] Log: [DISCORD][{e.Level}]: {e.Message}";
             Debug.WriteLine(output);
-            System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", output + Environment.NewLine);
+            try
+            {
+                System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", output + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         public static string CenterString(string value)
@@ -34,7 +41,14 @@ namespace DallarBot.Services
         public static void Log(string log)
         {
             Debug.WriteLine(log);
-            System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
+            try
+            {
+                System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         public static async Task LogUserActionAsync(CommandContext Context, string log)
