@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BotWeb\BotWeb.csproj" />
     <ProjectReference Include="..\DallarDaemonClient\DallarDaemonClient.csproj" />
     <ProjectReference Include="..\DallarSettings\DallarCommon.csproj" />
   </ItemGroup>

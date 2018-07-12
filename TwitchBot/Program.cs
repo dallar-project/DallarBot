@@ -1,4 +1,5 @@
-﻿using Dallar;
+﻿using BotWeb;
+using Dallar;
 using System;
 using System.Net;
 using TwitchLib.Client;
@@ -23,6 +24,7 @@ namespace TestConsole
         static DigitalPriceExchangeService DigitalPriceExchange;
         static DallarSettingsCollection SettingsCollection;
         static DaemonClient DaemonClient;
+        static BotWebServer WebServer;
         TwitchClient client;
 
         public Bot()
@@ -47,6 +49,8 @@ namespace TestConsole
             client.OnChatCommandReceived += onCommandReceived;
 
             client.Connect();
+
+            WebServer = new BotWebServer();
         }
 
         private void Client_OnConnected(object sender, OnConnectedArgs e)

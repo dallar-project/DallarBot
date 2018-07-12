@@ -19,7 +19,15 @@ namespace Dallar
         public static void Log(string log)
         {
             Debug.WriteLine(log);
-            File.AppendAllText(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
+            try
+            {
+                File.AppendAllText(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Failed to write log. " + e.Message);
+            }
+            
         }
     }
 }

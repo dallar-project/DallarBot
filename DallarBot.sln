@@ -5,18 +5,20 @@ VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DallarBot", "DallarBot\DallarBot.csproj", "{4192C37D-C1FE-420B-8BD8-2A38E178C1D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DallarDaemonClient", "DallarDaemonClient\DallarDaemonClient.csproj", "{9E523683-5531-4F7A-93A1-0EB02FF02054}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DallarDaemonClient", "DallarDaemonClient\DallarDaemonClient.csproj", "{9E523683-5531-4F7A-93A1-0EB02FF02054}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchBot", "TwitchBot\TwitchBot.csproj", "{F7270302-0216-49C6-820E-63A9C30C69A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwitchBot", "TwitchBot\TwitchBot.csproj", "{F7270302-0216-49C6-820E-63A9C30C69A5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9E523683-5531-4F7A-93A1-0EB02FF02054} = {9E523683-5531-4F7A-93A1-0EB02FF02054}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DallarCommon", "DallarSettings\DallarCommon.csproj", "{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DallarCommon", "DallarSettings\DallarCommon.csproj", "{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bots", "Bots", "{5D06A452-839D-4812-A19F-D08A2A9678E7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{37E69240-277C-4BFD-A58A-020357AF9B7B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotWeb", "BotWeb\BotWeb.csproj", "{2A6D8DC9-7C23-47CC-ABA8-A930BAC80A48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,6 +42,10 @@ Global
 		{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A6D8DC9-7C23-47CC-ABA8-A930BAC80A48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A6D8DC9-7C23-47CC-ABA8-A930BAC80A48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A6D8DC9-7C23-47CC-ABA8-A930BAC80A48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A6D8DC9-7C23-47CC-ABA8-A930BAC80A48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,6 +55,7 @@ Global
 		{9E523683-5531-4F7A-93A1-0EB02FF02054} = {37E69240-277C-4BFD-A58A-020357AF9B7B}
 		{F7270302-0216-49C6-820E-63A9C30C69A5} = {5D06A452-839D-4812-A19F-D08A2A9678E7}
 		{6FB1C919-9A05-46F9-8A0E-EBCCD77AD480} = {37E69240-277C-4BFD-A58A-020357AF9B7B}
+		{2A6D8DC9-7C23-47CC-ABA8-A930BAC80A48} = {5D06A452-839D-4812-A19F-D08A2A9678E7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {809599BD-9E99-4B86-8387-7ECCA46F4456}
