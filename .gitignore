@@ -1,13 +1,17 @@
 
 DallarBot/bin
 
+
 DallarBot/obj
+
 
 DallarBot/.vs
 
 /.vs
 
-DallarBot/settings\.json
+
+DallarBot/settings.json
+
 log.txt
 
 DallarDaemonClient/bin/
@@ -23,3 +27,7 @@ DallarSettings/bin/
 DallarSettings/obj/
 
 settings.json
+
+BotWeb/bin/
+
+BotWeb/obj/
