@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <UserSecretsId>aspnet-BotWebTest-63D95C06-D308-41FB-8803-180DC94CE529</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Styles\_Site.scss" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="AspNet.Security.OAuth.Twitch" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.2" PrivateAssets="All" />
+    <PackageReference Include="Nancy.Viewengines.Razor" Version="2.0.0-clinteastwood" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.1" />
+    <DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Migrations\" />
+    <Folder Include="Services\" />
+    <Folder Include="Styles\Libraries\" />
+    <Folder Include="wwwroot\css\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DallarDaemonClient\DallarDaemonClient.csproj" />
+    <ProjectReference Include="..\DallarSettings\DallarCommon.csproj" />
+    <ProjectReference Include="..\TwitchBot\TwitchBot.csproj" />
+  </ItemGroup>
+
+</Project>

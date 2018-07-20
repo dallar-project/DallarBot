@@ -48,7 +48,7 @@ namespace DallarBot.Classes
                 return false;
             }
 
-            if (!Program.DaemonClient.SendMinusFees(User.Id.ToString(), Program.DaemonClient.GetAccountAddress(Program.SettingsCollection.Dallar.FeeAccount), Amount, Program.SettingsCollection.Dallar.Txfee, Program.SettingsCollection.Dallar.FeeAccount))
+            if (!Program.DaemonClient.SendMinusFees(User.Id.ToString(), Program.DaemonClient.GetAccountAddressSubtle(Program.SettingsCollection.Dallar.FeeAccount), Amount, Program.SettingsCollection.Dallar.Txfee, Program.SettingsCollection.Dallar.FeeAccount))
             {
                 return false;
             }

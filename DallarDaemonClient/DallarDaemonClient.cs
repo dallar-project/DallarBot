@@ -11,11 +11,14 @@ namespace Dallar
 {
     public class DaemonClient
     {
-        public Uri uri;
-        public ICredentials credentials;
+        protected Uri uri;
+        protected ICredentials credentials;
+        protected string accountPrefix;
 
-        public DaemonClient(string _uri)
+        public DaemonClient(string _uri, string _accountPrefix, string _username, string password)
         {
+            accountPrefix = _accountPrefix;
+            credentials = new NetworkCredential(_username, password);
             var uriBuilder = new UriBuilder(_uri);
             uri = uriBuilder.Uri;
         }
@@ -71,7 +74,7 @@ namespace Dallar
 
         public string CreateNewAddressForUser(string Account)
         {
-            return InvokeMethod("getnewaddress", Account)["result"].ToString();
+            return InvokeMethod("getnewaddress", accountPrefix + Account)["result"].ToString();
         }
 
         public float GetDifficulty()
@@ -96,35 +99,47 @@ namespace Dallar
 
         public decimal GetRawAccountBalance(string Account)
         {
-            return (decimal)InvokeMethod("getbalance", Account, 6)["result"];
+            return (decimal)InvokeMethod("getbalance", accountPrefix + Account, 6)["result"];
         }
 
         public decimal GetUnconfirmedAccountBalance(string Account)
         {
-            decimal pending = (decimal)InvokeMethod("getbalance", Account, 0)["result"];
+            decimal pending = (decimal)InvokeMethod("getbalance", accountPrefix + Account, 0)["result"];
             return pending - GetRawAccountBalance(Account);
         }
 
-        public string GetAccountAddress(string Account)
+        public bool CanAccountAffordTransaction(string Account, decimal Amount, decimal Fee)
         {
-            return InvokeMethod("getaccountaddress", Account)["result"].ToString();
+            decimal balance = GetRawAccountBalance(Account);
+
+            if (Amount + Fee > balance)
+            {
+                return false;
+            }
+
+            return true;
         }
+
+        //public string GetAccountAddress(string Account)
+        //{
+        //    return InvokeMethod("getaccountaddress", accountPrefix + Account)["result"].ToString();
+        //}
 
         public string GetAccountAddressSubtle(string Account)
         {
-            List<String> list = InvokeMethod("getaddressesbyaccount", Account)["result"].ToObject<List<String>>();
+            List<String> list = InvokeMethod("getaddressesbyaccount", accountPrefix + Account)["result"].ToObject<List<String>>();
             return list[0];
         }
 
         public bool DoesAccountExist(string Account)
         {
-            List<String> list = InvokeMethod("getaddressesbyaccount", Account)["result"].ToObject<List<String>>();
+            List<String> list = InvokeMethod("getaddressesbyaccount", accountPrefix + Account)["result"].ToObject<List<String>>();
             return (list.Count >= 1);
         }
 
         public string SendToAddress(string fromAccount, string toWallet, decimal amount)
         {
-            return InvokeMethod("sendfrom", fromAccount, toWallet, amount, 1, "")["result"].ToString();
+            return InvokeMethod("sendfrom", accountPrefix + fromAccount, toWallet, amount, 1, "")["result"].ToString();
         }
 
         public decimal GetTransactionFee(string txid)
@@ -134,7 +149,7 @@ namespace Dallar
 
         public bool MoveToAddress(string fromAccount, string toAccount, decimal amount)
         {
-            string TransactionID = InvokeMethod("move", fromAccount, toAccount, amount, 1, "")["result"].ToString();
+            string TransactionID = InvokeMethod("move", accountPrefix + fromAccount, accountPrefix + toAccount, amount, 1, "")["result"].ToString();
             return (TransactionID != null && TransactionID != "");
         }
 

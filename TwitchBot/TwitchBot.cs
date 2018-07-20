@@ -1,47 +1,59 @@
-﻿using BotWeb;
-using Dallar;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net;
 using TwitchLib.Client;
-using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
-using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 
-namespace TestConsole
+namespace Dallar.Bots
 {
-    class Program
+    public static class ServiceCollectionExtensions
     {
-        static void Main(string[] args)
+        public static IServiceCollection AddTwitchBot(
+            this IServiceCollection services)
         {
-            Bot bot = new Bot();
-            Console.ReadLine();
+            services.AddSingleton<ITwitchBot, TwitchBot>();
+            return services;
         }
     }
 
-    class Bot
+    public class OnConnectionStatusChangedEventArgs : EventArgs
+    {
+        public bool bConnected { get; set; }
+    }
+
+    public interface ITwitchBot
+    {
+        DaemonClient DaemonClient { get; }
+
+        void AttemptJoinChannel(string channel);
+        void AttemptLeaveChannel(string channel);
+
+        event EventHandler<OnConnectionStatusChangedEventArgs> OnConnectionStatusChanged;
+    }
+
+    public class TwitchBot : ITwitchBot
     {
         static DigitalPriceExchangeService DigitalPriceExchange;
-        static DallarSettingsCollection SettingsCollection;
-        static DaemonClient DaemonClient;
-        static BotWebServer WebServer;
+        protected static DaemonClient _DaemonClient;
         TwitchClient client;
 
-        public Bot()
-        {
-            DallarSettingsCollection.FromConfig(Environment.CurrentDirectory + "/settings.json", out SettingsCollection);
+        protected IDallarSettingsCollection SettingsCollection;
 
-            ConnectionCredentials credentials = new ConnectionCredentials(SettingsCollection.Twitch.Username, SettingsCollection.Twitch.AccessToken);
+        public event EventHandler<OnConnectionStatusChangedEventArgs> OnConnectionStatusChanged;
+
+        public TwitchBot(IDallarSettingsCollection DallarSettingsCollection)
+        {
+            SettingsCollection = DallarSettingsCollection;
+
+            ConnectionCredentials credentials = new ConnectionCredentials(SettingsCollection.TwitchBot.Username, SettingsCollection.TwitchBot.AccessToken);
 
             DigitalPriceExchange = new DigitalPriceExchangeService();
 
-            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port)
-            {
-                credentials = new NetworkCredential(SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password)
-            };
+            _DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, SettingsCollection.Daemon.AccountPrefix, SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password);
 
             client = new TwitchClient();
-            client.Initialize(credentials, "awesomeallar", 'd', 'd');
+            client.Initialize(credentials, null, 'd', 'd');
 
             client.OnJoinedChannel += onJoinedChannel;
             client.OnConnected += Client_OnConnected;
@@ -49,13 +61,30 @@ namespace TestConsole
             client.OnChatCommandReceived += onCommandReceived;
 
             client.Connect();
+        }
 
-            WebServer = new BotWebServer();
+        public DaemonClient DaemonClient
+        {
+            get { return _DaemonClient; }
+        }
+
+        public void AttemptJoinChannel(string channel)
+        {
+            client.JoinChannel(channel);
+        }
+
+        public void AttemptLeaveChannel(string channel)
+        {
+            client.LeaveChannel(channel);
         }
 
         private void Client_OnConnected(object sender, OnConnectedArgs e)
         {
             Console.WriteLine($"Connected to {e.AutoJoinChannel}");
+            OnConnectionStatusChanged?.Invoke(this, new OnConnectionStatusChangedEventArgs()
+            {
+                bConnected = true
+            });
         }
 
         private void onJoinedChannel(object sender, OnJoinedChannelArgs e)
@@ -88,10 +117,10 @@ namespace TestConsole
                 bDisplayUSD = true;
             }
 
-            if (DaemonClient.GetWalletAddressFromAccount("twitch_" + e.Command.ChatMessage.UserId, true, out string Wallet))
+            if (_DaemonClient.GetWalletAddressFromAccount(e.Command.ChatMessage.UserId, true, out string Wallet))
             {
-                decimal balance = DaemonClient.GetRawAccountBalance("twitch_" + e.Command.ChatMessage.UserId);
-                decimal pendingBalance = DaemonClient.GetUnconfirmedAccountBalance("twitch_" + e.Command.ChatMessage.UserId);
+                decimal balance = _DaemonClient.GetRawAccountBalance(e.Command.ChatMessage.UserId);
+                decimal pendingBalance = _DaemonClient.GetUnconfirmedAccountBalance(e.Command.ChatMessage.UserId);
 
                 string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
                 string resultStr = $"@{e.Command.ChatMessage.DisplayName}: Your balance is {balance} DAL";
@@ -116,7 +145,7 @@ namespace TestConsole
 
         public void GetDallarDeposit(OnChatCommandReceivedArgs e)
         {
-            if (DaemonClient.GetWalletAddressFromAccount("twitch_" + e.Command.ChatMessage.UserId, true, out string Wallet))
+            if (_DaemonClient.GetWalletAddressFromAccount(e.Command.ChatMessage.UserId, true, out string Wallet))
             {
                 string resultStr = $"Your deposit address is {Wallet}. For help or more information, please visit http://dallar.tv/help";
                 client.SendWhisper(e.Command.ChatMessage.Username, resultStr);

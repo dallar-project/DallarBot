@@ -1,0 +1,18 @@
+﻿$theme-colors: (
+    "primary": #c31427,
+    "secondary": #22343c
+);
+
+$link-color: white;
+
+$font-family-sans-serif: "Montserrat";
+
+$body-bg: #1b2a32;
+$body-color:#adbbc4;
+
+$card-border-width: 1px;
+$card-border-color: #0f171c;
+
+$modal-backdrop-opacity: 0.75;
+$modal-content-bg: map-get($theme-colors, "secondary");
+$modal-header-border-color: black;

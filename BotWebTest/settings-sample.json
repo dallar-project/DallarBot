@@ -1,0 +1,23 @@
+{
+  "_comment": "Make a copy of this file in the current directory and rename it 'settings.json'. Then replace the following info.",
+
+  "TwitchBot": {
+    "Username": "REPLACE ME",
+    "AccessToken": "REPLACE ME"
+  },
+  "TwitchAuth": {
+    "ClientId": "REPLACE ME",
+    "ClientSecret": "REPLACE ME",
+    "Scopes": [ "chat_login" ]
+  },
+  "Daemon": {
+    "IpAddress": "127.0.0.1",
+    "Port": "20033",
+    "Username": "REPLACE ME",
+    "Password": "REPLACE ME"
+  },
+  "Dallar": {
+    "Txfee": 0.0002,
+    "FeeAccount": "REPLACE ME"
+  }
+}

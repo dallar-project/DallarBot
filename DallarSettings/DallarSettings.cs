@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using Newtonsoft.Json;
 
 namespace Dallar
@@ -10,6 +10,7 @@ namespace Dallar
         public string Port { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
+        public string AccountPrefix { get; set; }
     }
 
     public class DallarSettings
@@ -18,40 +19,57 @@ namespace Dallar
         public string FeeAccount { get; set; } = "txaccount";
     }
 
-    public class DiscordSettings
+    public class DiscordBotSettings
     {
-        public string BotToken { get; set; }
-        public string BotTaskName { get; set; }
+        public string Token { get; set; }
+        public string TaskName { get; set; }
     }
 
-    public class TwitchSettings
+    public class TwitchAuthSettings
+    {
+        public string ClientId { get; set; }
+        public string ClientSecret { get; set; }
+        public string[] Scopes { get; set; }
+    }
+
+    public class TwitchBotSettings
     {
         public string Username { get; set; }
         public string AccessToken { get; set; }
     }
 
-    public class DallarSettingsCollection
+    public interface IDallarSettingsCollection
+    {
+        DaemonSettings Daemon { get; set; }
+        DallarSettings Dallar { get; set; }
+        DiscordBotSettings Discord { get; set; }
+        TwitchAuthSettings TwitchAuth { get; set; }
+        TwitchBotSettings TwitchBot { get; set; }
+    }
+
+    public class DallarSettingsCollection : IDallarSettingsCollection
     {
         public DaemonSettings Daemon { get; set; }
         public DallarSettings Dallar { get; set; }
-        public DiscordSettings Discord { get; set; }
-        public TwitchSettings Twitch { get; set; }
+        public DiscordBotSettings Discord { get; set; }
+        public TwitchAuthSettings TwitchAuth { get; set; }
+        public TwitchBotSettings TwitchBot { get; set; }
 
-        public DallarSettingsCollection()
+        private DallarSettingsCollection()
         {
         }
 
-        public static bool FromConfig(string ConfigFilePath, out DallarSettingsCollection LoadedSettings)
+        public static DallarSettingsCollection FromConfig(string ConfigFilePath = "settings.json")
         {
             if (System.IO.File.Exists(ConfigFilePath))
             {
                 var loadedString = System.IO.File.ReadAllText(ConfigFilePath);
-                LoadedSettings =  JsonConvert.DeserializeObject<DallarSettingsCollection>(loadedString);
-                return true;
+                return JsonConvert.DeserializeObject<DallarSettingsCollection>(loadedString);
             }
-
-            LoadedSettings = null;
-            return false;
+            else
+            {
+                throw new FileNotFoundException("Could not load configuration file.", ConfigFilePath);
+            }
         }
     }
 }

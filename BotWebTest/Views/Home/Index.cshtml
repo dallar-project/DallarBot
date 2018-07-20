@@ -1,0 +1,97 @@
+﻿@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Dallar Twitch Bot";
+}
+
+<div class="row">
+    <div class="col-lg-6 d-flex mb-3">
+        <div class="card bg-secondary flex-fill">
+            <div class="card-body">
+                <h5 class="card-title text-white">Let Your Audience Give A Fuck</h5>
+                <hr />
+                <p class="card-text">The Dallar Twitch Bot allows users in your Twitch channel's chat to give eachother and yourself <a href="https://dallar.org">Dallar</a> with simple chat commands.</p>
+                <p class="card-text">Using the Dallar Twitch Bot is free and requires nothing to install or download. Simply connect it to your Twitch account.</p>
+                <p class="card-text">Please note that the Dallar Twitch Bot is currently in Beta and unknown bugs or issues may occur.</p>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <a class="btn btn-lg btn-block btn-social btn-twitch text-white" href="/Dashboard/Index">
+                        <i class="fab fa-twitch"></i> Go To Your Dashboard
+                    </a>
+                }
+                else
+                {
+                    var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+                    if (loginProviders.Count == 0)
+                    {
+                        <span>Login Provider Setup Error</span>
+                    }
+                    else
+                    {
+                        <form asp-controller="Dashboard" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
+                            @foreach (var provider in loginProviders)
+                            {
+                                <button type="submit" class="btn btn-lg btn-block btn-social btn-twitch text-white my-2 my-sm-0" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                                    <i class="fab fa-twitch"></i>Connect With @provider.Name
+                                </button>
+                            }
+                        </form>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 d-flex mb-3">
+        <div class="card bg-secondary flex-fill">
+            <img class="card-img-top mt-3 mx-auto" src="https://via.placeholder.com/350x150" style="width: 350px; height: 150px;">
+            <div class="card-body mx-auto ">
+                <p class="card-text">Quickly move Dallar around in chat.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 d-flex mb-3">
+        <div class="card bg-secondary">
+            <div class="card-body flex-fill">
+                <h5 class="card-title text-white">Features</h5>
+                <hr />
+                <div class="media mb-3">
+                    <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                    <div class="media-body">
+                        <h5 class="mt-0 text-white">No Software Required</h5>
+                        Users do not need to install, login, or configure anything to get started. Just by being in your channel, they will be able to send and receive Dallar to other users.
+                    </div>
+                </div>
+                <div class="media mb-3">
+                    <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                    <div class="media-body">
+                        <h5 class="mt-0 text-white">Works Across All Twitch Channels</h5>
+                        Users in any channel with Dallar Bot active will share the same Dallar Wallet across all channels. Your channel will be a part of Dallar network and will benefit from all features Dallar Bot rolls out across all channels.
+                    </div>
+                </div>
+                <div class="media mb-3">
+                    <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                    <div class="media-body">
+                        <h5 class="mt-0 text-white">Works Across All Twitch Channels</h5>
+                        Users in any channel with Dallar Bot active will share the same Dallar Wallet across all channels. Your channel will be a part of Dallar network and will benefit from all features Dallar Bot rolls out across all channels.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 d-flex mb-3">
+        <div class="card bg-secondary">
+            <div class="card-body flex-fill">
+                <h5 class="card-title text-white">Community and Support</h5>
+                <hr />
+                <p class="card-text">If you have any problems with the Dallar Twitch Bot, or simply just want to learn more and talk about it, join the <a href="https://dallar.org">Official Dallar Discord</a>.</p>
+                <div class="embed-responsive embed-responsive-1by1">
+                    <iframe src="https://discordapp.com/widget?id=391453840677011457&theme=dark" width="350" height="350" style="display:block" allowtransparency="true"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

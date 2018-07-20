@@ -1,0 +1,155 @@
+﻿@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Dashboard - Dallar Twitch Bot";
+}
+
+<!-- Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" role="dialog" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="withdrawModalLabel">Withdraw Dallar</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Use the form below to withdraw Dallar to a specified address. You currently have @ViewData["Balance"] DAL available.</p>
+                <div class="alert alert-warning" role="alert">
+                    Warning: Please double check your address below. If you withdraw to an incorrect address, there is zero chance of recovering your funds. Your Dallar will be burned forever.
+                </div>
+                <form asp-controller="Dashboard" asp-action="WithdrawDallar" asp-route-returnurl="/">
+                    <div class="form-group">
+                        <label for="dallarWithdrawAddress">Dallar Withdraw Address</label>
+                        <input class="form-control" type="text" name="DallarAddress" id="withdrawDallarAddress" aria-describedby="dallarWithdrawAddressHelp" placeholder="D..." required pattern="D[a-km-zA-HJ-NP-Z1-9]{26,33}">
+                        <small id="dallarWithdrawAddressHelp" class="form-text text-muted">Address to withdraw to. Please make sure this is accurate as we can't recover lost funds.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="withdrawAmount">Amount (Max: @ViewData["Spendable"] Dallar)</label>
+                        <input class="form-control" type="number" required name="Amount" id="withdrawAmount" aria-describedby="dallarWithdrawAddressHelp" placeholder="0" min="0.00000001" value="@ViewData["Spendable"]" step="any">
+                        <small id="withdrawAmountHelp" class="form-text text-muted">Address to withdraw to. Please make sure this is accurate as we can't recover lost funds.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ViewData["WithdrawSuccess"] != null || ViewData["WithdrawFailed"] != null)
+{
+    <div class="row">
+        <div class="col">
+            <div class="alert @(@ViewData["WithdrawSuccess"] != null ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+                @if (@ViewData["WithdrawSuccess"] != null)
+                {
+                    <span>@ViewData["WithdrawSuccess"]</span>
+                }
+                else
+                {
+                    <span>@ViewData["WithdrawFailed"]</span>
+                }
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col">
+        <div class="alert alert-warning" role="alert">
+            Warning: Dallar Bot is currently in Beta. Please report any issues, errors, or oddities to our <a class="text-danger" href="http://dallar.org">Discord</a> channel.
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7 d-flex mb-3">
+        <div class="card bg-secondary flex-fill">
+            <div class="card-body">
+                <h5 class="card-title text-white">Dallar Twitch Bot Wallet</h5>
+                <hr />
+                <div class="media mb-3">
+                    <div class="d-none d-md-block">
+                        <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                    </div>
+                    <div class="media-body">
+                        <h5 class="mt-0 text-white">Balance</h5>
+                        <p>
+                            Available: @ViewData["Balance"] DAL<br />
+                            Pending: @ViewData["PendingBalance"] DAL
+                        </p>
+                        <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#withdrawModal">
+                            Withdraw Dallar
+                        </button>
+                    </div>
+                </div>
+                <hr />
+                <div class="media mb-3">
+                    <div class="d-none d-md-block">
+                        <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                    </div>
+                    <div class="media-body">
+                        <h5 class="mt-0 text-white">Deposit Address</h5>
+                        <p>
+                            @ViewData["DepositAddress"]<br />
+                        </p>
+                        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#qrCollapse" aria-expanded="false" aria-controls="qrCollapse">
+                            Toggle QR Code Display
+                        </button>
+                        <div class="collapse mt-3" id="qrCollapse">
+                            <img src="https://chart.apis.google.com/chart?cht=qr&chs=300x300&chl=dallar:@ViewData["DepositAddress"]" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 d-flex mb-3">
+        <div class="card bg-secondary flex-fill">
+            <div class="card-body">
+                <h5 class="card-title text-white">Dallar Twitch Channel Settings</h5>
+                <hr />
+                <p class="card-text">The Dallar Twitch Bot allows users in your Twitch channel's chat to give eachother and yourself <a href="https://dallar.org">Dallar</a> with simple chat commands.</p>
+                <div class="media mb-3">
+                    <div class="d-none d-md-block">
+                        <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                    </div>
+                    <div class="media-body">
+                        @{
+                            var bShowDisable = (bool)ViewData["AddedToChannel"];
+                            if (bShowDisable)
+                            {
+                                <h5 class="mt-0 text-white">Disable Twitch Bot</h5>
+                                <p>Dallar Twitch Bot has been added to your channel. Click this button to remove it from your channel.</p>
+                                <form asp-controller="Dashboard" asp-action="SetTwitchBotActive" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
+                                    <button type="submit" name="bActive" value="false" class="btn btn-primary btn-block text-white my-2 my-sm-0">
+                                        Disable Twitch Bot
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <h5 class="mt-0 text-white">Enable Twitch Bot</h5>
+                                <p>Dallar Twitch Bot does not seem to be activated for your channel. Click this button to add the Dallar Twitch Bot to your channel.</p>
+                                <form asp-controller="Dashboard" asp-action="SetTwitchBotActive" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
+                                    <button type="submit" name="bActive" value="true" class="btn btn-primary btn-block text-white my-2 my-sm-0">
+                                        Enable Twitch Bot
+                                    </button>
+                                </form>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

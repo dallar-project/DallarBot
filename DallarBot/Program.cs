@@ -24,15 +24,12 @@ namespace DallarBot
 
         static void Main(string[] args)
         {
-            DallarSettingsCollection.FromConfig(Environment.CurrentDirectory + "/settings.json", out SettingsCollection);
+            SettingsCollection = DallarSettingsCollection.FromConfig(Environment.CurrentDirectory + "/settings.json");
             DigitalPriceExchange = new DigitalPriceExchangeService();
             RandomManager = new RandomManagerService();
             YoMommaJokes = new YoMommaJokeService();
 
-            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port)
-            {
-                credentials = new NetworkCredential(SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password)
-            };
+            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, "", SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password);
 
             // Ensure fee account is already created
             DaemonClient.GetWalletAddressFromAccount(SettingsCollection.Dallar.FeeAccount, true, out string toWallet);
@@ -54,7 +51,7 @@ namespace DallarBot
 
             DiscordClient = new DiscordShardedClient(new DiscordConfiguration
             {
-                Token = SettingsCollection.Discord.BotToken,
+                Token = SettingsCollection.Discord.Token,
                 TokenType = TokenType.Bot,
                 LogLevel = LogLevel.Debug
             });

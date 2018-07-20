@@ -31,3 +31,11 @@ settings.json
 BotWeb/bin/
 
 BotWeb/obj/
+
+BotWebTest/bin/
+
+BotWebTest/obj/
+
+BotWebTest/node_modules/
+
+BotWebTest/TwitchBot\.db
