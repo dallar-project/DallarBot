@@ -28,10 +28,11 @@ namespace DallarBot.Commands
                 bDisplayUSD = true;
             }
 
-            if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+            if (Program.DaemonClient.GetWalletAddressFromAccount(true, ref Account))
             {
-                decimal balance = Program.DaemonClient.GetRawAccountBalance(Context.User.Id.ToString());
-                decimal pendingBalance = Program.DaemonClient.GetUnconfirmedAccountBalance(Context.User.Id.ToString());
+                decimal balance = Program.DaemonClient.GetRawAccountBalance(Account);
+                decimal pendingBalance = Program.DaemonClient.GetUnconfirmedAccountBalance(Account);
 
                 string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
                 string resultStr = $"{Context.User.Mention}: Your balance is {balance} DAL";
@@ -61,7 +62,8 @@ namespace DallarBot.Commands
         [Description("Sends information on how to deposit Dallar")]
         public async Task GetDallarDeposit(CommandContext Context)
         {
-            if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+            if (Program.DaemonClient.GetWalletAddressFromAccount(true, ref Account))
             {
                 DiscordEmbedBuilder EmbedBuilder = new DiscordEmbedBuilder();
 
@@ -72,9 +74,9 @@ namespace DallarBot.Commands
                 EmbedBuilder.AddField("Warning About Storage", "Dallar Bot should not be used as a long term storage for your Dallar. Dallar Bot is only accessible through Discord and if the Bot or Discord are down for any reason, you will *not* be able to access your stored Dallar.");
                 EmbedBuilder.AddField("Dallar Bot Fees", $"All transactions with Dallar Bot incur a flat {Program.SettingsCollection.Dallar.Txfee} DAL fee to cover the Dallar blockchain transaction fees as well as funding and maintenance costs sent to the Dallar Bot server hoster.");
                 EmbedBuilder.AddField("Blockchain Transactions", $"Dallar Bot uses the blockchain to keep track of its transactions, meaning your transactions will require 6 confirmation blocks before they are completed. This should take approximately 5 to 10 minutes under normal Dallar network conditions.");
-                EmbedBuilder.AddField("Depositing", $"You can deposit Dallar into your Dallar Bot balance by sending Dallar to this address generated specifically for you: `{Wallet}`");
+                EmbedBuilder.AddField("Depositing", $"You can deposit Dallar into your Dallar Bot balance by sending Dallar to this address generated specifically for you: `{Account.KnownAddress}`");
 
-                EmbedBuilder.WithImageUrl($"https://api.qrserver.com/v1/create-qr-code/?data=dallar:{Wallet}&qzone=2");
+                EmbedBuilder.WithImageUrl($"https://api.qrserver.com/v1/create-qr-code/?data=dallar:{Account.KnownAddress}&qzone=2");
 
                 LogHandlerExtensions.LogUserAction(Context, $"Fetched deposit info.");
                 await DiscordHelpers.RespondAsDM(Context, EmbedBuilder.Build());
@@ -103,6 +105,11 @@ namespace DallarBot.Commands
                 return;
             }
 
+            DallarAccount WithdrawAccount = new DallarAccount()
+            {
+                KnownAddress = PublicAddress
+            };
+
             // Try to interpret the user's amount input as a sane value
             if (!DallarHelpers.TryParseUserAmountString(Context.User, AmountStr, out decimal Amount))
             {
@@ -122,11 +129,13 @@ namespace DallarBot.Commands
                 return;
             }
 
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+
             // Verify user has requested balance to withdraw
             if (!DallarHelpers.CanUserAffordTransactionAmount(Context.User, Amount))
             {
                 // user can not afford requested withdraw amount
-                LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({Program.DaemonClient.GetRawAccountBalance(Context.User.Id.ToString())})");
+                LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({Program.DaemonClient.GetRawAccountBalance(Account)})");
                 await Context.RespondAsync($"{Context.User.Mention}: Looks like you don't have enough funds withdraw {Amount} DAL! Remember, there is a {Program.SettingsCollection.Dallar.Txfee} DAL fee for performing bot transactions.");
                 DiscordHelpers.DeleteNonPrivateMessage(Context);
                 return;
@@ -134,17 +143,26 @@ namespace DallarBot.Commands
 
             // Amount should be guaranteed a good value to withdraw
             // Fetch user's wallet
-            if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
+            if (Program.DaemonClient.GetWalletAddressFromAccount(true, ref Account))
             {
-                if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), PublicAddress, Amount, Program.SettingsCollection.Dallar.Txfee, Program.SettingsCollection.Dallar.FeeAccount))
+                if (Program.DaemonClient.SendMinusFees(Account, WithdrawAccount, Amount, false))
                 {
                     // Successfully withdrew
-                    LogHandlerExtensions.LogUserAction(Context, $"Successfully withdrew {Amount} from wallet ({Wallet}).");
-                    await Context.RespondAsync($"You have successfully withdrawn {Amount} DAL" + (Context.Member == null ? "." : $" to address {PublicAddress}."));
+                    LogHandlerExtensions.LogUserAction(Context, $"Successfully withdrew {Amount} to address ({WithdrawAccount.KnownAddress}).");
+                    if (Context.Member != null)
+                    {
+                        await Context.RespondAsync($"You have successfully withdrawn {Amount} DAL.");
+                    }
+                    else
+                    {
+                        await Context.RespondAsync($"You have successfully withdrawn {Amount} DAL to address ({WithdrawAccount.KnownAddress}).");
+                    }
+
+                    
                 }
                 else
                 {   // unable to send dallar
-                    LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} from wallet ({Wallet}) but daemon failed to send transaction.");
+                    LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} from wallet ({Account.KnownAddress}) but daemon failed to send transaction.");
                     await Context.RespondAsync("Something went wrong trying to send your Dallar through the Dallar daemon. (Please contact the Administrators!)");
                     DiscordHelpers.DeleteNonPrivateMessage(Context);
                     return;
@@ -259,8 +277,10 @@ namespace DallarBot.Commands
                 return;
             }
 
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+
             // Failed to get senders wallet?
-            if (!Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string FromWallet))
+            if (!Program.DaemonClient.GetWalletAddressFromAccount(true, ref Account))
             {
                 LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar{RandomUserString} but can not get sender's wallet.");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot failed to get your wallet. Please contact an Administrator.");
@@ -268,8 +288,10 @@ namespace DallarBot.Commands
                 return;
             }
 
+            DallarAccount ToAccount = DiscordHelpers.DallarAccountFromDiscordUser(Member);
+
             // Failed to get receiver's wallet?
-            if (!Program.DaemonClient.GetWalletAddressFromAccount(Member.Id.ToString(), true, out string ToWallet))
+            if (!Program.DaemonClient.GetWalletAddressFromAccount(true, ref ToAccount))
             {
                 LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar{RandomUserString} but can not get receiver's wallet. Receiver: {Member.Id.ToString()} ({Member.Username.ToString()})");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot failed to get your wallet. Please contact an Administrator.");
@@ -287,7 +309,7 @@ namespace DallarBot.Commands
             }
 
             // Were we able to successfully send the transaction?
-            if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), ToWallet, Amount, Program.SettingsCollection.Dallar.Txfee, Program.SettingsCollection.Dallar.FeeAccount))
+            if (Program.DaemonClient.SendMinusFees(Account, ToAccount, Amount, true))
             {
                 bool bDisplayUSD = false;
                 if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
@@ -295,7 +317,7 @@ namespace DallarBot.Commands
                     bDisplayUSD = true;
                 }
 
-                LogHandlerExtensions.LogUserAction(Context, $"Sent {Amount} DAL ${(IsRandomSend ? "randomly " : "")}to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
+                LogHandlerExtensions.LogUserAction(Context, $"Sent {Amount} DAL ${(IsRandomSend ? "randomly " : "")}to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToAccount.KnownAddress}.");
                 string ReplyStr = $"{Context.User.Mention}: You have successfully {(IsRandomSend ? "randomly " : "")}sent {Member.Mention} {Amount} DAL.";
 
                 if (bDisplayUSD)
@@ -309,7 +331,7 @@ namespace DallarBot.Commands
             }
             else
             {   // sending failed?
-                LogHandlerExtensions.LogUserAction(Context, $"Failed to have daemon send{RandomUserString} {Amount} DAL to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
+                LogHandlerExtensions.LogUserAction(Context, $"Failed to have daemon send{RandomUserString} {Amount} DAL to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToAccount.KnownAddress}.");
                 await Context.RespondAsync($"{Context.User.Mention}: DallarBot has failed to send{RandomUserString} {Amount} DAL. Please contact an Administrator.");
                 _ = Context.Message.DeleteAsync();
                 return;

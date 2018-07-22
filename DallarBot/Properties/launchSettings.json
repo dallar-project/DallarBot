@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DallarBot": {
+      "commandName": "Project",
+      "workingDirectory": "D:\\github\\DallarBot\\DallarBot"
+    }
+  }
+}

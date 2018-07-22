@@ -15,11 +15,11 @@
 </head>
 <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
-        <a class="navbar-brand" href="#"><img src="~/images/dallar_logo.png" />Dallar Twitch Bot<span class="d-none d-sm-inline">&nbsp;(Beta)</span></a>
+        <a class="navbar-brand" href="#"><img src="~/images/dallar_logo.png" />Dallar Bot<span class="d-none d-sm-inline">&nbsp;(Beta)</span></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="navbar-collapse collapse">
+        <div class="navbar-collapse collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                 @if (SignInManager.IsSignedIn(User))
@@ -42,13 +42,17 @@
                 }
                 else
                 {
-                    <form asp-controller="Dashboard" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
-                        @foreach (var provider in loginProviders)
-                        {
-                            <button type="submit" class="btn btn-block btn-social btn-twitch text-white my-2 my-sm-0" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
-                                <i class="fab fa-twitch"></i>Connect With @provider.Name
+                    <form asp-controller="Dashboard" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-row">
+                        <div class="col-sm-6 col-md-auto my-1 mx-1">
+                            <button type="submit" class="btn btn-block btn-social btn-twitch text-white" name="provider" value="Twitch" title="Connect With Twitch">
+                                <i class="fab fa-twitch"></i><span class="d-inline d-md-none d-lg-inline">Connect With Twitch</span><span class="d-none d-md-inline d-lg-none">Twitch</span>
                             </button>
-                        }
+                        </div>
+                        <div class="col-sm-6 col-md-auto my-1 mx-1">
+                            <button type="submit" class="btn btn-block btn-social btn-discord text-white" name="provider" value="discord" title="Connect With Discord">
+                                <i class="fab fa-discord"></i><span class="d-inline d-md-none d-lg-inline">Connect With Discord</span><span class="d-none d-md-inline d-lg-none">Discord</span>
+                            </button>
+                        </div>
                     </form>
                 }
             }

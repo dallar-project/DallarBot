@@ -45,20 +45,65 @@ namespace BotWebTest.Controllers
             if (_signInManager.IsSignedIn(User))
             {
                 ApplicationUser user = await _userManager.GetUserAsync(HttpContext.User);
+                DallarAccount DallarAccount = user.DallarAccount();
 
-                if (_twitchBot.DaemonClient.GetWalletAddressFromAccount(user.NameIdentifier, true, out string depositAddress))
+                if (_twitchBot.DaemonClient.GetWalletAddressFromAccount(true, ref DallarAccount))
                 {
-                    decimal balance = _twitchBot.DaemonClient.GetRawAccountBalance(user.NameIdentifier);
-                    decimal pendingBalance = _twitchBot.DaemonClient.GetUnconfirmedAccountBalance(user.NameIdentifier);
+                    ViewData["ShowDiscordWallet"] = false;
+                    ViewData["ShowTwitchWallet"] = false;
+                    ViewData["IsDiscordLinked"] = false;
+                    ViewData["IsTwitchLinked"] = false;
+                    ViewData["HasDiscordDallar"] = false;
+                    ViewData["HasTwitchDallar"] = false;
 
-                    ViewData["Balance"] = balance;
-                    ViewData["PendingBalance"] = pendingBalance;
+                    if (!string.IsNullOrEmpty(user.DiscordAccountId))
+                    {
+                        ViewData["ShowDiscordWallet"] = true;
+                        ViewData["IsDiscordLinked"] = true;
 
-                    decimal txfee = _settingsCollection.Dallar.Txfee;
-                    decimal Amount = balance - txfee;
-                    ViewData["Spendable"] = Amount;
+                        decimal balance = _twitchBot.DaemonClient.GetRawAccountBalance(DallarAccount);
+                        decimal pendingBalance = _twitchBot.DaemonClient.GetUnconfirmedAccountBalance(DallarAccount);
 
-                    ViewData["DepositAddress"] = depositAddress;
+                        ViewData["DiscordBalance"] = balance;
+                        ViewData["DiscordPendingBalance"] = pendingBalance;
+
+                        ViewData["HasDiscordDallar"] = (balance > 0);
+
+                        decimal txfee = _settingsCollection.Dallar.Txfee;
+                        decimal Amount = balance - txfee;
+                        ViewData["DiscordSpendable"] = Amount;
+
+                        ViewData["DiscordDepositAddress"] = DallarAccount.KnownAddress;
+
+                        ViewData["WithdrawBalance"] = balance;
+                        ViewData["WithdrawSpendable"] = Amount;
+                    }
+
+                    if (!string.IsNullOrEmpty(user.TwitchAccountId))
+                    {
+                        ViewData["ShowTwitchWallet"] = ((bool)ViewData["ShowDiscordWallet"] == false);
+                        ViewData["IsTwitchLinked"] = true;
+
+                        decimal balance = _twitchBot.DaemonClient.GetRawAccountBalance(DallarAccount);
+                        decimal pendingBalance = _twitchBot.DaemonClient.GetUnconfirmedAccountBalance(DallarAccount);
+
+                        ViewData["TwitchBalance"] = balance;
+                        ViewData["TwitchPendingBalance"] = pendingBalance;
+
+                        ViewData["HasTwitchDallar"] = (balance > 0);
+
+                        decimal txfee = _settingsCollection.Dallar.Txfee;
+                        decimal Amount = balance - txfee;
+                        ViewData["TwitchSpendable"] = Amount;
+
+                        ViewData["TwitchDepositAddress"] = DallarAccount.KnownAddress;
+
+                        if((bool)ViewData["ShowDiscordWallet"] == false)
+                        {
+                            ViewData["WithdrawBalance"] = balance;
+                            ViewData["WithdrawSpendable"] = Amount;
+                        }
+                    }
 
                     DallarWithdrawResultModel WithdrawInfo = TempData.Get<DallarWithdrawResultModel>("Withdraw");
 
@@ -79,7 +124,7 @@ namespace BotWebTest.Controllers
                     // @TODO: Wallet error?
                 }
 
-                ViewData["AddedToChannel"] = user.AddedToChannel;                
+                ViewData["AddedToChannel"] = user.AddedToTwitchChannel;                
 
                 return View();
             }
@@ -87,11 +132,6 @@ namespace BotWebTest.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             }
-        }
-
-        public void Ass()
-        {
-            _userManager.Users.Where(x => x.AddedToChannel == true);
         }
 
         [HttpPost]
@@ -104,16 +144,21 @@ namespace BotWebTest.Controllers
             }
 
             ApplicationUser user = await _userManager.GetUserAsync(HttpContext.User);
-            user.AddedToChannel = bActive;
+            if (string.IsNullOrEmpty(user.TwitchChannel))
+            {
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+
+            user.AddedToTwitchChannel = bActive;
             await _userManager.UpdateAsync(user);
 
             if (bActive)
             {
-                _twitchBot.AttemptJoinChannel(user.UserName);
+                _twitchBot.AttemptJoinChannel(user.TwitchChannel);
             }
             else
             {
-                _twitchBot.AttemptLeaveChannel(user.UserName);
+                _twitchBot.AttemptLeaveChannel(user.TwitchChannel);
             }
 
             return RedirectToAction(nameof(DashboardController.Index));
@@ -129,6 +174,9 @@ namespace BotWebTest.Controllers
             }
 
             ApplicationUser user = await _userManager.GetUserAsync(HttpContext.User);
+            DallarAccount DallarAccount = user.DallarAccount();
+
+            DallarAccount WithdrawAccount = new DallarAccount();
 
             // Invalid address?
             if (!_twitchBot.DaemonClient.IsAddressValid(DallarWithdrawData.DallarAddress))
@@ -141,6 +189,8 @@ namespace BotWebTest.Controllers
 
                 return RedirectToAction(nameof(DashboardController.Index));
             }
+
+            WithdrawAccount.KnownAddress = DallarWithdrawData.DallarAddress;
 
             // Invalid amount?
             if (DallarWithdrawData.Amount <= 0)
@@ -155,7 +205,7 @@ namespace BotWebTest.Controllers
             }
 
             // Can't afford transaction?
-            if (!_twitchBot.DaemonClient.CanAccountAffordTransaction(user.NameIdentifier, DallarWithdrawData.Amount, _settingsCollection.Dallar.Txfee))
+            if (!_twitchBot.DaemonClient.CanAccountAffordTransaction(DallarAccount, DallarWithdrawData.Amount))
             {
                 // @TODO: Getting wallet failed?
                 TempData.Put("Withdraw", new DallarWithdrawResultModel()
@@ -169,9 +219,9 @@ namespace BotWebTest.Controllers
 
             // Amount should be guaranteed a good value to withdraw
             // Fetch user's wallet
-            if (_twitchBot.DaemonClient.GetWalletAddressFromAccount(user.NameIdentifier, true, out string Wallet))
+            if (_twitchBot.DaemonClient.GetWalletAddressFromAccount(true, ref DallarAccount))
             {
-                if (_twitchBot.DaemonClient.SendMinusFees(user.NameIdentifier, DallarWithdrawData.DallarAddress, DallarWithdrawData.Amount, _settingsCollection.Dallar.Txfee, _settingsCollection.Dallar.FeeAccount))
+                if (_twitchBot.DaemonClient.SendMinusFees(DallarAccount, WithdrawAccount, DallarWithdrawData.Amount, true))
                 {
                     // Successfully withdrew
                     TempData.Put("Withdraw", new DallarWithdrawResultModel()
@@ -181,7 +231,7 @@ namespace BotWebTest.Controllers
                         Amount = DallarWithdrawData.Amount
                     });
 
-                    _logger.LogInformation($"{user.UserName} ({user.NameIdentifier}): Successfully withdrew {DallarWithdrawData.Amount} from wallet ({Wallet}).");
+                    _logger.LogInformation($"{user.UserName} ({DallarAccount.UniqueAccountName}): Successfully withdrew {DallarWithdrawData.Amount} from wallet ({DallarAccount}) to {WithdrawAccount.KnownAddress}.");
                     return RedirectToAction(nameof(DashboardController.Index));
                 }
                 else
@@ -248,8 +298,99 @@ namespace BotWebTest.Controllers
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
-                _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
-                return RedirectToLocal(returnUrl);
+                // Attempt to link two accounts together
+                if (_signInManager.IsSignedIn(User) && User.Identity != info.Principal)
+                {
+                    ApplicationUser user = await _userManager.GetUserAsync(User);
+
+                    if (info.LoginProvider == "Twitch")
+                    {
+                        // Already have a linked twitch account, do nothing?
+                        // @TODO: Error handling
+                        if (!string.IsNullOrEmpty(user.TwitchChannel))
+                        {
+                            _logger.LogInformation("User already has Twitch info but tried merging Twitch account?");
+                            return RedirectToLocal("/");
+                        }
+                        else
+                        {
+                            ApplicationUser oldUser = _userManager.Users.First(x => x.TwitchAccountId == info.Principal.FindFirstValue(ClaimTypes.NameIdentifier));
+                            if (oldUser != null)
+                            {
+                                await _userManager.RemoveLoginAsync(oldUser, info.LoginProvider, info.ProviderKey);
+                                await _userManager.DeleteAsync(oldUser);
+                            }
+
+                            // Merge new twitch data into this account
+                            user.TwitchAccountId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                            user.TwitchChannel = info.Principal.FindFirstValue(ClaimTypes.Name);
+                            var userResult = await _userManager.UpdateAsync(user);
+                            if (userResult.Succeeded)
+                            {
+                                userResult = await _userManager.AddLoginAsync(user, info);
+                                if (userResult.Succeeded)
+                                {
+                                    decimal bal = _twitchBot.DaemonClient.GetRawAccountBalance(user.DallarAccount("Twitch"));
+                                    if (bal - _twitchBot.DaemonClient.txFee > 0)
+                                    {
+                                        _twitchBot.DaemonClient.SendMinusFees(user.DallarAccount("Twitch"), user.DallarAccount("Discord"), bal - _twitchBot.DaemonClient.txFee, true);
+                                    }
+
+                                    await _signInManager.SignInAsync(user, isPersistent: false);
+                                    _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                                    return RedirectToAction(nameof(DashboardController.Index));
+                                }
+                            }
+                        }
+                    }
+                    else if (info.LoginProvider == "Discord")
+                    {
+                        // Already have a linked twitch account, do nothing?
+                        // @TODO: Error handling
+                        if (!string.IsNullOrEmpty(user.DiscordUserName))
+                        {
+                            _logger.LogInformation("User already has Discord info but tried merging Discord account?");
+                            return RedirectToLocal("/");
+                        }
+                        else
+                        {
+                            ApplicationUser oldUser = _userManager.Users.First(x => x.DiscordAccountId == info.Principal.FindFirstValue(ClaimTypes.NameIdentifier));
+                            if (oldUser != null)
+                            {
+                                await _userManager.RemoveLoginAsync(oldUser, info.LoginProvider, info.ProviderKey);
+                                await _userManager.DeleteAsync(oldUser);
+                            }
+
+                            // Merge new discord data into this account
+                            user.DiscordAccountId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                            user.DiscordUserName = info.Principal.FindFirstValue(ClaimTypes.Name);
+                            var userResult = await _userManager.UpdateAsync(user);
+                            if (userResult.Succeeded)
+                            {
+                                userResult = await _userManager.AddLoginAsync(user, info);
+                                if (userResult.Succeeded)
+                                {
+                                    decimal bal = _twitchBot.DaemonClient.GetRawAccountBalance(user.DallarAccount("Twitch"));
+                                    if (bal - _twitchBot.DaemonClient.txFee > 0)
+                                    {
+                                        _twitchBot.DaemonClient.SendMinusFees(user.DallarAccount("Twitch"), user.DallarAccount("Discord"), bal - _twitchBot.DaemonClient.txFee, true);
+                                    }
+
+                                    await _signInManager.SignInAsync(user, isPersistent: false);
+                                    _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                                    return RedirectToAction(nameof(DashboardController.Index));
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
+                    return RedirectToLocal(returnUrl);
+                }
+
+                
             }
             if (result.IsLockedOut)
             {
@@ -257,28 +398,80 @@ namespace BotWebTest.Controllers
             }
             else
             {
-                // If the user does not have an account, create an account.
-                ViewData["ReturnUrl"] = returnUrl;
-                ViewData["LoginProvider"] = info.LoginProvider;
-
-                var user = new ApplicationUser {
-                    Email = info.Principal.FindFirstValue(ClaimTypes.Email),
-                    UserName = info.Principal.FindFirstValue(ClaimTypes.Name),
-                    NameIdentifier = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier)
-                };
-
-                var userResult = await _userManager.CreateAsync(user);
-                if (userResult.Succeeded)
+                // User is not logged in, so lets register a user
+                if (!_signInManager.IsSignedIn(User))
                 {
-                    userResult = await _userManager.AddLoginAsync(user, info);
+
+                    ViewData["ReturnUrl"] = returnUrl;
+                    ViewData["LoginProvider"] = info.LoginProvider;
+
+                    var user = new ApplicationUser
+                    {
+                        UserName = info.Principal.FindFirstValue(ClaimTypes.Name)
+                    };
+
+                    if (info.ProviderDisplayName == "Twitch")
+                    {
+                        user.TwitchAccountId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                        user.TwitchChannel = info.Principal.FindFirstValue(ClaimTypes.Name);
+                    }
+                    else if (info.ProviderDisplayName == "Discord")
+                    {
+                        user.DiscordAccountId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                        user.DiscordUserName = info.Principal.FindFirstValue(ClaimTypes.Name);
+                    }
+                    else
+                    {
+                        return RedirectToLocal("/");
+                    }
+
+                    var userResult = await _userManager.CreateAsync(user);
                     if (userResult.Succeeded)
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-                        return RedirectToLocal(returnUrl);
+                        userResult = await _userManager.AddLoginAsync(user, info);
+                        if (userResult.Succeeded)
+                        {
+                            await _signInManager.SignInAsync(user, isPersistent: false);
+                            _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                            return RedirectToAction(nameof(DashboardController.Index));
+                        }
                     }
+                    AddErrors(userResult);
                 }
-                AddErrors(userResult);
+                else // User is logged in, must be linking a new account that has no need to merge
+                {
+                    ApplicationUser user = await _userManager.GetUserAsync(HttpContext.User);
+
+                    if (info.ProviderDisplayName == "Twitch")
+                    {
+                        user.TwitchAccountId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                        user.TwitchChannel = info.Principal.FindFirstValue(ClaimTypes.Name);
+                    }
+                    else if (info.ProviderDisplayName == "Discord")
+                    {
+                        user.DiscordAccountId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                        user.DiscordUserName = info.Principal.FindFirstValue(ClaimTypes.Name);
+                    }
+                    else
+                    {
+                        return RedirectToLocal("/");
+                    }
+
+                    var userResult = await _userManager.UpdateAsync(user);
+                    if (userResult.Succeeded)
+                    {
+                        userResult = await _userManager.AddLoginAsync(user, info);
+                        if (userResult.Succeeded)
+                        {
+                            await _signInManager.SignInAsync(user, isPersistent: false);
+                            _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                            return RedirectToAction(nameof(DashboardController.Index));
+                        }
+                    }
+                    AddErrors(userResult);
+                }
+                
+                
             }
 
             return RedirectToLocal("/");

@@ -21,6 +21,46 @@ namespace BotWebTest
 
         public IConfiguration Configuration { get; }
 
+        public class DallarAccountOverrider : IDallarAccountOverrider
+        {
+            protected IApplicationBuilder _app;
+            public DallarAccountOverrider(IApplicationBuilder app)
+            {
+                _app = app;
+            }
+
+            public bool OverrideDallarAccountIfNeeded(ref DallarAccount Account)
+            {
+                DallarAccount tempAccount = Account;
+
+                using (var scope = _app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
+                {
+                    var Manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+                    //@TODO: Not hardcode these prefixes
+                    if (Account.AccountPrefix == "twitch_")
+                    {
+                        ApplicationUser accountUser = Manager.Users.First(x => x.TwitchAccountId == tempAccount.AccountId);
+                        if (accountUser != null)
+                        {
+                            Account = accountUser.DallarAccount();
+                            return true;
+                        }
+                    }
+                    else if (Account.AccountPrefix == "")
+                    {
+                        ApplicationUser accountUser = Manager.Users.First(x => x.DiscordAccountId == tempAccount.AccountId);
+                        if (accountUser != null)
+                        {
+                            Account = accountUser.DallarAccount();
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -43,6 +83,13 @@ namespace BotWebTest
                     twitchOptions.ClientSecret = SettingsCollection.TwitchAuth.ClientSecret;
                     SettingsCollection.TwitchAuth.Scopes.ToList().ForEach(x => twitchOptions.Scope.Add(x));
                 });
+
+            services.AddAuthentication().AddDiscord(discordOptions =>
+            {
+                discordOptions.ClientId = SettingsCollection.Discord.ClientId;
+                discordOptions.ClientSecret = SettingsCollection.Discord.ClientSecret;
+                discordOptions.Scope.Add("guilds");
+            });
 
             services.AddMvc();
 
@@ -82,14 +129,15 @@ namespace BotWebTest
                     using (var scope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
                     {
                         var Manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                        var addedUsers = Manager.Users.Where(x => x.AddedToChannel == true);
+                        var addedUsers = Manager.Users.Where(x => x.AddedToTwitchChannel == true);
                         foreach (ApplicationUser user in addedUsers)
                         {
-                            (o as ITwitchBot).AttemptJoinChannel(user.UserName);
+                            (o as ITwitchBot).AttemptJoinChannel(user.TwitchChannel);
                         }
                     }
                 }
             };
+            TwitchBot.SetAccountOverrider(new DallarAccountOverrider(app));
         }
     }
 }

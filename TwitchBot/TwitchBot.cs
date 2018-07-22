@@ -29,6 +29,8 @@ namespace Dallar.Bots
         void AttemptJoinChannel(string channel);
         void AttemptLeaveChannel(string channel);
 
+        void SetAccountOverrider(IDallarAccountOverrider DallarAccountOverrider);
+
         event EventHandler<OnConnectionStatusChangedEventArgs> OnConnectionStatusChanged;
     }
 
@@ -39,6 +41,7 @@ namespace Dallar.Bots
         TwitchClient client;
 
         protected IDallarSettingsCollection SettingsCollection;
+        protected IDallarAccountOverrider AccountOverrider;
 
         public event EventHandler<OnConnectionStatusChangedEventArgs> OnConnectionStatusChanged;
 
@@ -50,7 +53,7 @@ namespace Dallar.Bots
 
             DigitalPriceExchange = new DigitalPriceExchangeService();
 
-            _DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, SettingsCollection.Daemon.AccountPrefix, SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password);
+            _DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password, SettingsCollection.Dallar.Txfee, new DallarAccount() { AccountId = SettingsCollection.Dallar.FeeAccount });
 
             client = new TwitchClient();
             client.Initialize(credentials, null, 'd', 'd');
@@ -66,6 +69,11 @@ namespace Dallar.Bots
         public DaemonClient DaemonClient
         {
             get { return _DaemonClient; }
+        }
+
+        public void SetAccountOverrider(IDallarAccountOverrider DallarAccountOverrider)
+        {
+            AccountOverrider = DallarAccountOverrider;
         }
 
         public void AttemptJoinChannel(string channel)
@@ -109,6 +117,24 @@ namespace Dallar.Bots
             }
         }
 
+        protected static string TwitchAccountPrefix = "twitch_";
+
+        protected DallarAccount GetChatCommandAccount(OnChatCommandReceivedArgs e)
+        {
+            DallarAccount TwitchAccount = new DallarAccount()
+            {
+                AccountId = e.Command.ChatMessage.UserId,
+                AccountPrefix = TwitchAccountPrefix
+            };
+
+            if (AccountOverrider != null)
+            {
+                AccountOverrider.OverrideDallarAccountIfNeeded(ref TwitchAccount);
+            }
+
+            return TwitchAccount;
+        }
+
         private void CheckBalance(OnChatCommandReceivedArgs e)
         {
             bool bDisplayUSD = false;
@@ -117,10 +143,11 @@ namespace Dallar.Bots
                 bDisplayUSD = true;
             }
 
-            if (_DaemonClient.GetWalletAddressFromAccount(e.Command.ChatMessage.UserId, true, out string Wallet))
+            DallarAccount account = GetChatCommandAccount(e);
+            if (_DaemonClient.GetWalletAddressFromAccount(true, ref account))
             {
-                decimal balance = _DaemonClient.GetRawAccountBalance(e.Command.ChatMessage.UserId);
-                decimal pendingBalance = _DaemonClient.GetUnconfirmedAccountBalance(e.Command.ChatMessage.UserId);
+                decimal balance = _DaemonClient.GetRawAccountBalance(account);
+                decimal pendingBalance = _DaemonClient.GetUnconfirmedAccountBalance(account);
 
                 string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
                 string resultStr = $"@{e.Command.ChatMessage.DisplayName}: Your balance is {balance} DAL";
@@ -145,9 +172,10 @@ namespace Dallar.Bots
 
         public void GetDallarDeposit(OnChatCommandReceivedArgs e)
         {
-            if (_DaemonClient.GetWalletAddressFromAccount(e.Command.ChatMessage.UserId, true, out string Wallet))
+            DallarAccount account = GetChatCommandAccount(e);
+            if (_DaemonClient.GetWalletAddressFromAccount(true, ref account))
             {
-                string resultStr = $"Your deposit address is {Wallet}. For help or more information, please visit http://dallar.tv/help";
+                string resultStr = $"Your deposit address is {account.KnownAddress}. For help or more information, please visit http://dallar.tv/help";
                 client.SendWhisper(e.Command.ChatMessage.Username, resultStr);
             }
             else

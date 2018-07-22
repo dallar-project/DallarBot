@@ -13,14 +13,16 @@ namespace Dallar
     {
         protected Uri uri;
         protected ICredentials credentials;
-        protected string accountPrefix;
+        public decimal txFee;
+        public DallarAccount FeeAccount;
 
-        public DaemonClient(string _uri, string _accountPrefix, string _username, string password)
+        public DaemonClient(string _uri, string _username, string password, decimal txFee, DallarAccount FeeAccount)
         {
-            accountPrefix = _accountPrefix;
             credentials = new NetworkCredential(_username, password);
             var uriBuilder = new UriBuilder(_uri);
             uri = uriBuilder.Uri;
+            this.txFee = txFee;
+            this.FeeAccount = FeeAccount;
         }
 
         public JObject InvokeMethod(string _method, params object[] _params)
@@ -72,11 +74,6 @@ namespace Dallar
             }
         }
 
-        public string CreateNewAddressForUser(string Account)
-        {
-            return InvokeMethod("getnewaddress", accountPrefix + Account)["result"].ToString();
-        }
-
         public float GetDifficulty()
         {
             return (float)InvokeMethod("getdifficulty")["result"];
@@ -97,22 +94,22 @@ namespace Dallar
             return InvokeMethod("getmininginfo")["result"] as JObject;
         }
 
-        public decimal GetRawAccountBalance(string Account)
+        public decimal GetRawAccountBalance(DallarAccount Account)
         {
-            return (decimal)InvokeMethod("getbalance", accountPrefix + Account, 6)["result"];
+            return (decimal)InvokeMethod("getbalance", Account.UniqueAccountName, 6)["result"];
         }
 
-        public decimal GetUnconfirmedAccountBalance(string Account)
+        public decimal GetUnconfirmedAccountBalance(DallarAccount Account)
         {
-            decimal pending = (decimal)InvokeMethod("getbalance", accountPrefix + Account, 0)["result"];
+            decimal pending = (decimal)InvokeMethod("getbalance", Account.UniqueAccountName, 0)["result"];
             return pending - GetRawAccountBalance(Account);
         }
 
-        public bool CanAccountAffordTransaction(string Account, decimal Amount, decimal Fee)
+        public bool CanAccountAffordTransaction(DallarAccount Account, decimal Amount)
         {
             decimal balance = GetRawAccountBalance(Account);
 
-            if (Amount + Fee > balance)
+            if (Amount + txFee > balance)
             {
                 return false;
             }
@@ -125,21 +122,32 @@ namespace Dallar
         //    return InvokeMethod("getaccountaddress", accountPrefix + Account)["result"].ToString();
         //}
 
-        public string GetAccountAddressSubtle(string Account)
+        public string GetAccountAddressSubtle(DallarAccount Account)
         {
-            List<String> list = InvokeMethod("getaddressesbyaccount", accountPrefix + Account)["result"].ToObject<List<String>>();
+            List<String> list = InvokeMethod("getaddressesbyaccount", Account.UniqueAccountName)["result"].ToObject<List<String>>();
             return list[0];
         }
 
-        public bool DoesAccountExist(string Account)
+        public bool DoesAccountExist(DallarAccount Account)
         {
-            List<String> list = InvokeMethod("getaddressesbyaccount", accountPrefix + Account)["result"].ToObject<List<String>>();
+            List<String> list = InvokeMethod("getaddressesbyaccount", Account.UniqueAccountName)["result"].ToObject<List<String>>();
             return (list.Count >= 1);
         }
 
-        public string SendToAddress(string fromAccount, string toWallet, decimal amount)
+        public string SendToAddress(DallarAccount FromAccount, DallarAccount ToAccount, decimal amount, bool bCreateToAccountIfNotFound)
         {
-            return InvokeMethod("sendfrom", accountPrefix + fromAccount, toWallet, amount, 1, "")["result"].ToString();
+            if (!ToAccount.IsAddressKnown)
+            {
+                if (!string.IsNullOrEmpty(ToAccount.UniqueAccountName))
+                {
+                    if (!GetWalletAddressFromAccount(bCreateToAccountIfNotFound, ref ToAccount))
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            return InvokeMethod("sendfrom", FromAccount.UniqueAccountName, ToAccount.KnownAddress, amount, 1, "")["result"].ToString();
         }
 
         public decimal GetTransactionFee(string txid)
@@ -147,20 +155,20 @@ namespace Dallar
             return (decimal)InvokeMethod("gettransaction", txid)["result"]["fee"];
         }
 
-        public bool MoveToAddress(string fromAccount, string toAccount, decimal amount)
+        public bool MoveToAddress(DallarAccount FromAccount, DallarAccount ToAccount, decimal Amount)
         {
-            string TransactionID = InvokeMethod("move", accountPrefix + fromAccount, accountPrefix + toAccount, amount, 1, "")["result"].ToString();
+            string TransactionID = InvokeMethod("move", FromAccount.UniqueAccountName, FromAccount.UniqueAccountName, Amount, 1, "")["result"].ToString();
             return (TransactionID != null && TransactionID != "");
         }
 
-        public bool SendMinusFees(string fromAccount, string toWallet, decimal amount, decimal Fee, string FeeAccount)
+        public bool SendMinusFees(DallarAccount FromAccount, DallarAccount ToAccount, decimal amount, bool bCreateToAccountIfNotFound)
         {
-            string txid = SendToAddress(fromAccount, toWallet, amount);
+            string txid = SendToAddress(FromAccount, ToAccount, amount, bCreateToAccountIfNotFound);
             if (txid != null || txid != "")
             {
                 decimal transactionFee = GetTransactionFee(txid);
-                decimal remainder = transactionFee + Fee;
-                return MoveToAddress(fromAccount, FeeAccount, remainder);
+                decimal remainder = transactionFee + txFee;
+                return MoveToAddress(FromAccount, ToAccount, remainder);
             }
             return false;
         }
@@ -170,19 +178,18 @@ namespace Dallar
             return (int)InvokeMethod("getblockcount")["result"];
         }
 
-        public bool GetWalletAddressFromAccount(string Account, bool createIfNotFound, out string walletAddress)
+        public bool GetWalletAddressFromAccount(bool createIfNotFound, ref DallarAccount Account)
         {
-            walletAddress = "";
             if (DoesAccountExist(Account))
             {
-                walletAddress = GetAccountAddressSubtle(Account);
+                Account.KnownAddress = GetAccountAddressSubtle(Account);
                 return true;
             }
             else
             {
                 if (createIfNotFound)
                 {
-                    walletAddress = CreateNewAddressForUser(Account);
+                    Account.KnownAddress = InvokeMethod("getnewaddress", Account.UniqueAccountName)["result"].ToString();
                     return true;
                 }
                 else

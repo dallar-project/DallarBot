@@ -24,15 +24,15 @@ namespace DallarBot
 
         static void Main(string[] args)
         {
-            SettingsCollection = DallarSettingsCollection.FromConfig(Environment.CurrentDirectory + "/settings.json");
+            SettingsCollection = DallarSettingsCollection.FromConfig("settings.json");
             DigitalPriceExchange = new DigitalPriceExchangeService();
             RandomManager = new RandomManagerService();
             YoMommaJokes = new YoMommaJokeService();
 
-            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, "", SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password);
+            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password, SettingsCollection.Dallar.Txfee, new DallarAccount() { AccountId = SettingsCollection.Dallar.FeeAccount });
 
             // Ensure fee account is already created
-            DaemonClient.GetWalletAddressFromAccount(SettingsCollection.Dallar.FeeAccount, true, out string toWallet);
+            DaemonClient.GetWalletAddressFromAccount(true, ref DaemonClient.FeeAccount);
 
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
         }

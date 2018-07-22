@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using Dallar;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
@@ -75,6 +76,15 @@ namespace DallarBot.Classes
             }
 
             return false;
+        }
+
+        public static DallarAccount DallarAccountFromDiscordUser(DiscordUser User)
+        {
+            return new DallarAccount()
+            {
+                AccountId = User.Id.ToString(),
+                AccountPrefix = "" // @TODO: Make config driven
+            };
         }
 
         public static void DeleteNonPrivateMessage(CommandContext Context)

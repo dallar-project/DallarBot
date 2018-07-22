@@ -29,13 +29,13 @@
                     }
                     else
                     {
-                        <form asp-controller="Dashboard" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
-                            @foreach (var provider in loginProviders)
-                            {
-                                <button type="submit" class="btn btn-lg btn-block btn-social btn-twitch text-white my-2 my-sm-0" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
-                                    <i class="fab fa-twitch"></i>Connect With @provider.Name
-                                </button>
-                            }
+                        <form asp-controller="Dashboard" asp-action="ExternalLogin" asp-route-returnurl="/Dashboard/Index" method="post" class="form-inline my-2 my-lg-0">
+                            <button type="submit" class="btn btn-block btn-social btn-twitch text-white" name="provider" value="Twitch" title="Connect With Twitch">
+                                <i class="fab fa-twitch"></i><span class="d-none d-sm-inline">Connect With Twitch</span><span class="d-inline d-sm-none">Twitch</span>
+                            </button>
+                            <button type="submit" class="btn btn-block btn-social btn-discord text-white" name="provider" value="Discord" title="Connect With Discord">
+                                <i class="fab fa-discord"></i><span class="d-none d-sm-inline">Connect With Discord</span><span class="d-inline d-sm-none">Discord</span>
+                            </button>
                         </form>
                     }
                 }
@@ -44,7 +44,7 @@
     </div>
     <div class="col-lg-6 d-flex mb-3">
         <div class="card bg-secondary flex-fill">
-            <img class="card-img-top mt-3 mx-auto" src="https://via.placeholder.com/350x150" style="width: 350px; height: 150px;">
+            <img class="card-img-top mt-3 mx-auto img-fluid" src="https://via.placeholder.com/350x150" style="width: 350px; height: 150px;">
             <div class="card-body mx-auto ">
                 <p class="card-text">Quickly move Dallar around in chat.</p>
             </div>

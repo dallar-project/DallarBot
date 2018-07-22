@@ -4,7 +4,7 @@
     ViewData["Title"] = "Dashboard - Dallar Twitch Bot";
 }
 
-<!-- Modal -->
+<!-- Withdraw Modal -->
 <div class="modal fade" id="withdrawModal" tabindex="-1" role="dialog" aria-labelledby="withdrawModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -15,7 +15,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>Use the form below to withdraw Dallar to a specified address. You currently have @ViewData["Balance"] DAL available.</p>
+                <p>Use the form below to withdraw Dallar to a specified address. You currently have @ViewData["WithdrawBalance"] DAL available.</p>
                 <div class="alert alert-warning" role="alert">
                     Warning: Please double check your address below. If you withdraw to an incorrect address, there is zero chance of recovering your funds. Your Dallar will be burned forever.
                 </div>
@@ -26,8 +26,8 @@
                         <small id="dallarWithdrawAddressHelp" class="form-text text-muted">Address to withdraw to. Please make sure this is accurate as we can't recover lost funds.</small>
                     </div>
                     <div class="form-group">
-                        <label for="withdrawAmount">Amount (Max: @ViewData["Spendable"] Dallar)</label>
-                        <input class="form-control" type="number" required name="Amount" id="withdrawAmount" aria-describedby="dallarWithdrawAddressHelp" placeholder="0" min="0.00000001" value="@ViewData["Spendable"]" step="any">
+                        <label for="withdrawAmount">Amount (Max: @ViewData["WithdrawSpendable"] Dallar)</label>
+                        <input class="form-control" type="number" required name="Amount" id="withdrawAmount" aria-describedby="dallarWithdrawAddressHelp" placeholder="0" min="0.00000001" value="@ViewData["WithdrawSpendable"]" step="any">
                         <small id="withdrawAmountHelp" class="form-text text-muted">Address to withdraw to. Please make sure this is accurate as we can't recover lost funds.</small>
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -39,6 +39,88 @@
         </div>
     </div>
 </div>
+
+@{
+    var bIsDiscordLinked = (bool)ViewData["IsDiscordLinked"];
+    var bIsTwitchLinked = (bool)ViewData["IsTwitchLinked"];
+
+    var bShowDiscordWallet = (bool)ViewData["ShowDiscordWallet"];
+    var bShowTwitchWallet = (bool)ViewData["ShowTwitchWallet"];
+
+    var bHasDiscordDallar = (bool)ViewData["HasDiscordDallar"];
+    var bHasTwitchDallar = (bool)ViewData["HasTwitchDallar"];
+}
+
+@if (!bIsDiscordLinked)
+{
+    <!-- Link Discord Account Modal -->
+    <div class="modal fade" id="linkDiscordModal" tabindex="-1" role="dialog" aria-labelledby="linkDiscordModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="linkDiscordModalLabel">Link Discord Account</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>You are about to link a Discord account to your Dallar Bot Account.</p>
+                    @if (bHasTwitchDallar)
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            Warning: Your Twitch Wallet Balance (@ViewData["TwitchBalance"]) will be moved into your newly linked Discord account. All future Twitch Dallar Bot interactions will use your Discord Dallar Wallet.
+                        </div>
+                    }
+                    <div class="alert alert-warning" role="alert">
+                        Warning: There is currently no way to unlink accounts once accounts are linked.
+                    </div>
+                    <form asp-controller="Dashboard" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-row">
+                        <button type="submit" class="btn btn-block btn-social btn-discord text-white" name="provider" value="Discord" title="Link Discord">
+                            <i class="fab fa-discord"></i>Link Discord Account
+                        </button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!bIsTwitchLinked)
+{
+    <!-- Link Twitch Account Modal -->
+    <div class="modal fade" id="linkTwitchModal" tabindex="-1" role="dialog" aria-labelledby="linkTwitchModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="linkTwitchModalLabel">Link Twitch Account</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>You are about to link a Twitch account to your Dallar Bot Account.</p>
+                    <div class="alert alert-warning" role="alert">
+                        Warning: If the Twitch account you are linking already owns Dallar with Dallar bot, your Twitch Dallar will be moved into your Discord Dallar. All future Twitch Dallar Bot interactions will use your Discord Dallar Wallet.
+                    </div>
+                    <div class="alert alert-warning" role="alert">
+                        Warning: There is currently no way to unlink accounts once accounts are linked.
+                    </div>
+                    <form asp-controller="Dashboard" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-row">
+                        <button type="submit" class="btn btn-block btn-social btn-twitch text-white" name="provider" value="Twitch" title="Link Twitch">
+                            <i class="fab fa-twitch"></i>Link Twitch Account
+                        </button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @if (ViewData["WithdrawSuccess"] != null || ViewData["WithdrawFailed"] != null)
 {
@@ -70,86 +152,162 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-7 d-flex mb-3">
+    <div class="col-lg-6 d-flex mb-3">
         <div class="card bg-secondary flex-fill">
+            <img class="card-img-top img-fluid mx-auto" style="max-height: 128px; max-width: 376px; width: auto; height: auto;" src="https://discordapp.com/assets/fc0b01fe10a0b8c602fb0106d8189d9b.png">
             <div class="card-body">
-                <h5 class="card-title text-white">Dallar Twitch Bot Wallet</h5>
-                <hr />
-                <div class="media mb-3">
-                    <div class="d-none d-md-block">
-                        <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
-                    </div>
-                    <div class="media-body">
-                        <h5 class="mt-0 text-white">Balance</h5>
-                        <p>
-                            Available: @ViewData["Balance"] DAL<br />
-                            Pending: @ViewData["PendingBalance"] DAL
-                        </p>
-                        <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#withdrawModal">
-                            Withdraw Dallar
-                        </button>
-                    </div>
-                </div>
-                <hr />
-                <div class="media mb-3">
-                    <div class="d-none d-md-block">
-                        <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
-                    </div>
-                    <div class="media-body">
-                        <h5 class="mt-0 text-white">Deposit Address</h5>
-                        <p>
-                            @ViewData["DepositAddress"]<br />
-                        </p>
-                        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#qrCollapse" aria-expanded="false" aria-controls="qrCollapse">
-                            Toggle QR Code Display
-                        </button>
-                        <div class="collapse mt-3" id="qrCollapse">
-                            <img src="https://chart.apis.google.com/chart?cht=qr&chs=300x300&chl=dallar:@ViewData["DepositAddress"]" />
+                @{
+                    if (bShowDiscordWallet)
+                    {
+                        <h5 class="card-title text-white">Discord Dallar Bot Wallet</h5>
+                        <hr />
+                        <div class="media mb-3">
+                            <div class="d-none d-md-block">
+                                <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                            </div>
+                            <div class="media-body">
+                                <h5 class="mt-0 text-white">Balance</h5>
+                                <p>
+                                    Available: @ViewData["DiscordBalance"] DAL<br />
+                                    Pending: @ViewData["DiscordPendingBalance"] DAL
+                                </p>
+                                <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#withdrawModal">
+                                    Withdraw Dallar
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                        <hr />
+                        <div class="media mb-3">
+                            <div class="d-none d-md-block">
+                                <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                            </div>
+                            <div class="media-body">
+                                <h5 class="mt-0 text-white">Deposit Address</h5>
+                                <p class="depositAddress">
+                                    @ViewData["DiscordDepositAddress"]<br />
+                                </p>
+                                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#qrDiscordCollapse" aria-expanded="false" aria-controls="qrDiscordCollapse">
+                                    Toggle QR Code Display
+                                </button>
+                                <div class="collapse mt-3" id="qrDiscordCollapse">
+                                    <img src="https://chart.apis.google.com/chart?cht=qr&chs=300x300&chl=dallar:@ViewData["DiscordDepositAddress"]" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    if (bIsDiscordLinked)
+                    {
+
+
+                    }
+                    else
+                    {
+                        <h5 class="card-title text-white">Discord Account Linking</h5>
+                        <hr />
+                        <div class="card-body">
+                            <button type="submit" data-toggle="modal" data-target="#linkDiscordModal" class="btn btn-block btn-social btn-discord text-white" name="provider" value="Discord" title="Link Discord">
+                                <i class="fab fa-discord"></i>Link Discord To Your Account
+                            </button>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>
-
-    <div class="col-lg-5 d-flex mb-3">
+    <div class="col-lg-6 d-flex mb-3">
         <div class="card bg-secondary flex-fill">
+            <svg class="card-img-top mx-auto p-3" height="128px" version="1.1" viewBox="0 0 94 32" width="376px" x="0px" y="0px" style="fill: #6441a4; max-height: 128px; max-width: 376px; width: auto; height: auto;">
+                <path clip-rule="evenodd" d="M88,5h-6V0h-9l-6,5h-5.5L59,7.5V5h-5V0H36v5H16l-5-5H0v22l5,5.25L14,32h6v-1.5l3,1.5h12l2-3l1,3h7v-3l3,3h8l0.5-3l2.5,3h10l3-3v3h4l3-3v3h7l7-6V10L88,5z M13,13H8v6h5v6H6l-4-4V2h6v5h5V13z M36,21.5L32.5,25H15V7h6v12h2V7h6v12h2V7h5V21.5z M44,25h-6V7h6V25z M44,5h-6V2h6V5z M57,13h-5v6h5v6h-7l-4-4V2h6v5h5V13z M72,13h-7v6h7v6h-9l-4-4V11l4-4h9V13z M91,25h-6V13h-5v12h-6V2h6v5h7l4,4V25z" fill-rule="evenodd"></path>
+            </svg>
             <div class="card-body">
-                <h5 class="card-title text-white">Dallar Twitch Channel Settings</h5>
-                <hr />
-                <p class="card-text">The Dallar Twitch Bot allows users in your Twitch channel's chat to give eachother and yourself <a href="https://dallar.org">Dallar</a> with simple chat commands.</p>
-                <div class="media mb-3">
-                    <div class="d-none d-md-block">
-                        <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
-                    </div>
-                    <div class="media-body">
-                        @{
-                            var bShowDisable = (bool)ViewData["AddedToChannel"];
-                            if (bShowDisable)
-                            {
-                                <h5 class="mt-0 text-white">Disable Twitch Bot</h5>
-                                <p>Dallar Twitch Bot has been added to your channel. Click this button to remove it from your channel.</p>
-                                <form asp-controller="Dashboard" asp-action="SetTwitchBotActive" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
-                                    <button type="submit" name="bActive" value="false" class="btn btn-primary btn-block text-white my-2 my-sm-0">
-                                        Disable Twitch Bot
-                                    </button>
-                                </form>
-                            }
-                            else
-                            {
-                                <h5 class="mt-0 text-white">Enable Twitch Bot</h5>
-                                <p>Dallar Twitch Bot does not seem to be activated for your channel. Click this button to add the Dallar Twitch Bot to your channel.</p>
-                                <form asp-controller="Dashboard" asp-action="SetTwitchBotActive" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
-                                    <button type="submit" name="bActive" value="true" class="btn btn-primary btn-block text-white my-2 my-sm-0">
-                                        Enable Twitch Bot
-                                    </button>
-                                </form>
-                            }
-                        }
-                    </div>
-                </div>
+                @{
+                    if (bShowTwitchWallet)
+                    {
+                        <h5 class="card-title text-white">Twitch Dallar Bot Wallet</h5>
+                        <hr />
+                        <div class="media mb-3">
+                            <div class="d-none d-md-block">
+                                <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                            </div>
+                            <div class="media-body">
+                                <h5 class="mt-0 text-white">Balance</h5>
+                                <p>
+                                    Available: @ViewData["TwitchBalance"] DAL<br />
+                                    Pending: @ViewData["TwitchPendingBalance"] DAL
+                                </p>
+                                <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#withdrawModal">
+                                    Withdraw Dallar
+                                </button>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="media mb-3">
+                            <div class="d-none d-md-block">
+                                <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                            </div>
+                            <div class="media-body">
+                                <h5 class="mt-0 text-white">Deposit Address</h5>
+                                <p class="depositAddress">
+                                    @ViewData["TwitchDepositAddress"]<br />
+                                </p>
+                                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#qrTwitchCollapse" aria-expanded="false" aria-controls="qrTwitchCollapse">
+                                    Toggle QR Code Display
+                                </button>
+                                <div class="collapse mt-3" id="qrTwitchCollapse">
+                                    <img src="https://chart.apis.google.com/chart?cht=qr&chs=300x300&chl=dallar:@ViewData["TwitchDepositAddress"]" />
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                    }
+                    if (bIsTwitchLinked)
+                    {
+                        <h5 class="text-white">Dallar Twitch Channel Settings</h5>
+                        <p class="card-text">The Dallar Twitch Bot allows users in your Twitch channel's chat to give eachother and yourself <a href="https://dallar.org">Dallar</a> with simple chat commands.</p>
+                        <hr />
+                        <div class="media mb-3">
+                            <div class="d-none d-md-block">
+                                <img class="mr-3" src="https://via.placeholder.com/64x64" alt="Generic placeholder image">
+                            </div>
+                            <div class="media-body">
+                                @{
+                                    var bShowDisable = (bool)ViewData["AddedToChannel"];
+                                    if (bShowDisable)
+                                    {
+                                        <h5 class="mt-0 text-white">Disable Twitch Bot</h5>
+                                        <p>Dallar Twitch Bot has been added to your channel. Click this button to remove it from your channel.</p>
+                                        <form asp-controller="Dashboard" asp-action="SetTwitchBotActive" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
+                                            <button type="submit" name="bActive" value="false" class="btn btn-primary btn-block text-white my-2 my-sm-0">
+                                                Disable Twitch Bot
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <h5 class="mt-0 text-white">Enable Twitch Bot</h5>
+                                        <p>Dallar Twitch Bot does not seem to be activated for your channel. Click this button to add the Dallar Twitch Bot to your channel.</p>
+                                        <form asp-controller="Dashboard" asp-action="SetTwitchBotActive" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-inline my-2 my-lg-0">
+                                            <button type="submit" name="bActive" value="true" class="btn btn-primary btn-block text-white my-2 my-sm-0">
+                                                Enable Twitch Bot
+                                            </button>
+                                        </form>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <h5 class="card-title text-white">Twitch Account Linking</h5>
+                        <hr />
+                        <div class="card-body">
+                            <button type="submit" data-toggle="modal" data-target="#linkTwitchModal" class="btn btn-block btn-social btn-twitch text-white" name="provider" value="Twitch" title="Link Twitch">
+                                <i class="fab fa-twitch"></i>Link Twitch To Your Account
+                            </button>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>
-
 </div>

@@ -248,3 +248,7 @@ $bs-height-xs: floor($btn-line-height + $btn-padding-x-sm * 2);
 .btn-whatsapp {
   @include btn-social(#25D366, #fff);
 }
+
+.btn-discord {
+    @include btn-social(#7289DA, #fff);
+}

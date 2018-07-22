@@ -21,8 +21,11 @@ namespace Dallar
 
     public class DiscordBotSettings
     {
+        public string ClientId { get; set; }
+        public string ClientSecret { get; set; }
         public string Token { get; set; }
         public string TaskName { get; set; }
+        public string DallarAccountPrefix { get; set; }
     }
 
     public class TwitchAuthSettings
@@ -36,6 +39,7 @@ namespace Dallar
     {
         public string Username { get; set; }
         public string AccessToken { get; set; }
+        public string DallarAccountPrefix { get; set; }
     }
 
     public interface IDallarSettingsCollection
