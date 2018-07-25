@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Net;
 using System.Threading.Tasks;
-using Dallar;
+using Dallar.Exchange;
+using Dallar.Services;
 using DallarBot.Classes;
 using DallarBot.Commands;
 using DallarBot.Services;
@@ -9,36 +9,29 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
 
-namespace DallarBot
+namespace Dallar.Bots
 {
-    public class Program
+    public class DiscordBot
     {
         static DiscordShardedClient DiscordClient;
         public static DallarSettingsCollection SettingsCollection;
-        public static DaemonClient DaemonClient;
-        public static DigitalPriceExchangeService DigitalPriceExchange;
         public static RandomManagerService RandomManager;
-        public static YoMommaJokeService YoMommaJokes;
 
-        static void Main(string[] args)
+        protected IDallarSettingsCollection DallarSettingsCollection;
+        protected IDallarPriceProviderService DallarPriceProviderService;
+        protected IDallarClientService DallarClientService;
+        protected IFunServiceCollection FunServiceCollection;
+
+        public DiscordBot(IDallarSettingsCollection DallarSettingsCollection, IDallarClientService DallarClientService, IDallarPriceProviderService DallarPriceProviderService, IFunServiceCollection FunServiceCollection)
         {
-            SettingsCollection = DallarSettingsCollection.FromConfig("settings.json");
-            DigitalPriceExchange = new DigitalPriceExchangeService();
+            this.DallarSettingsCollection = DallarSettingsCollection;
+            this.DallarClientService = DallarClientService;
+            this.DallarPriceProviderService = DallarPriceProviderService;
+            this.FunServiceCollection = FunServiceCollection;
+
             RandomManager = new RandomManagerService();
-            YoMommaJokes = new YoMommaJokeService();
 
-            DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password, SettingsCollection.Dallar.Txfee, new DallarAccount() { AccountId = SettingsCollection.Dallar.FeeAccount });
-
-            // Ensure fee account is already created
-            DaemonClient.GetWalletAddressFromAccount(true, ref DaemonClient.FeeAccount);
-
-            MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
-        static async Task MainAsync(string[] args)
-        {
             Console.WriteLine(LogHandlerService.CenterString("▒█▀▀▄ █▀▀█ █░░ █░░ █▀▀█ █▀▀█ ▒█▀▀█ █▀▀█ ▀▀█▀▀ "));
             Console.WriteLine(LogHandlerService.CenterString("▒█░▒█ █▄▄█ █░░ █░░ █▄▄█ █▄▄▀ ▒█▀▀▄ █░░█ ░░█░░ "));
             Console.WriteLine(LogHandlerService.CenterString("▒█▄▄▀ ▀░░▀ ▀▀▀ ▀▀▀ ▀░░▀ ▀░▀▀ ▒█▄▄█ ▀▀▀▀ ░░▀░░ "));
@@ -64,6 +57,11 @@ namespace DallarBot
                     await e.Message.RespondAsync("pong!");
             };
 
+            StartUpBot();
+        }
+
+        protected async void StartUpBot()
+        {
             await DiscordClient.UseCommandsNextAsync(new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { "d!" },
@@ -105,14 +103,7 @@ namespace DallarBot
                     await e.Context.Client.GetCommandsNext().SudoAsync(e.Context.User, Channel, "d!help " + e.Command.Name);
                     DiscordHelpers.DeleteNonPrivateMessage(e.Context);
                 };
-
             }
-
-
-            await DiscordClient.UseInteractivityAsync(new InteractivityConfiguration
-            {
-
-            });
 
             await DiscordClient.StartAsync();
             await Task.Delay(-1);

@@ -9,6 +9,7 @@ using DSharpPlus.CommandsNext;
 using DallarBot.Classes;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Entities;
+using Dallar.Services;
 
 namespace DallarBot.Commands
 {
@@ -25,6 +26,14 @@ namespace DallarBot.Commands
         {
             LogHandlerExtensions.LogUserAction(Context, "Invoked Dad Joke");
 
+            IFunServiceCollection FunServiceCollection = Context.Services.GetService(typeof(IFunServiceCollection)) as IFunServiceCollection;
+            string Joke = FunServiceCollection.DadJokeService.GetJoke();
+            if (string.IsNullOrEmpty(Joke))
+            {
+                _ = DiscordHelpers.PromptUserToDeleteMessage(Context, $"Sorry {Context.Member}, the Dad joke service seems to be down.");
+                return;
+            }
+
             if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
             {
                 LogHandlerExtensions.LogUserAction(Context, "Failed charged for dad Joke");
@@ -32,14 +41,7 @@ namespace DallarBot.Commands
             }
 
             LogHandlerExtensions.LogUserAction(Context, "Successfully charged for dad Joke");
-
-            await Context.TriggerTypingAsync();
-
-            var client = new WebClient();
-            client.Headers.Add("Accept", "text/plain");
-
-            var joke = await client.DownloadStringTaskAsync("https://icanhazdadjoke.com/");
-            await Context.RespondAsync($"{Context.User.Mention} : {joke}");
+            await Context.RespondAsync($"{Context.User.Mention} : {Joke}");
         }
 
         /** Allar (Chuck Norris) API Puller */
@@ -52,6 +54,14 @@ namespace DallarBot.Commands
         {
             LogHandlerExtensions.LogUserAction(Context, "Invoked Allar Joke");
 
+            IFunServiceCollection FunServiceCollection = Context.Services.GetService(typeof(IFunServiceCollection)) as IFunServiceCollection;
+            string Joke = FunServiceCollection.ChuckNorrisJokeService.GetJoke();
+            if (string.IsNullOrEmpty(Joke))
+            {
+                _ = DiscordHelpers.PromptUserToDeleteMessage(Context, $"Sorry {Context.Member}, the Allar joke service seems to be down.");
+                return;
+            }
+
             if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
             {
                 LogHandlerExtensions.LogUserAction(Context, "Failed charged for Allar Joke");
@@ -59,23 +69,7 @@ namespace DallarBot.Commands
             }
 
             LogHandlerExtensions.LogUserAction(Context, "Successfully charged for Allar Joke");
-
-            await Context.TriggerTypingAsync();
-            var httpClient = new HttpClient();
-            var content = await httpClient.GetStringAsync("http://api.icndb.com/jokes/random?firstName=Michael&lastName=Allar");
-
-            try
-            {
-                dynamic jokeResult = JsonConvert.DeserializeObject(content);
-                string joke = jokeResult.value.joke;
-                joke = System.Net.WebUtility.HtmlDecode(joke);
-                await Context.RespondAsync($"{Context.User.Mention} : {joke}");
-            }
-            catch
-            {
-                LogHandlerExtensions.LogUserAction(Context, "Failed to perform Allar Joke");
-                await Context.RespondAsync($"{Context.User.Mention}: Failed to fetch joke. Please contact an Administrator.");
-            }
+            await Context.RespondAsync($"{Context.User.Mention} : {Joke}");
         }
 
         [Command("momma")]
@@ -87,6 +81,14 @@ namespace DallarBot.Commands
         {
             LogHandlerExtensions.LogUserAction(Context, "Invoked mom joke.");
 
+            IFunServiceCollection FunServiceCollection = Context.Services.GetService(typeof(IFunServiceCollection)) as IFunServiceCollection;
+            string Joke = FunServiceCollection.YoMommaJokeService.GetJoke();
+            if (string.IsNullOrEmpty(Joke))
+            {
+                _ = DiscordHelpers.PromptUserToDeleteMessage(Context, $"Sorry {Context.Member}, the Yo Momma joke service seems to be down.");
+                return;
+            }
+
             if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
             {
                 LogHandlerExtensions.LogUserAction(Context, "Failed charged for mom Joke");
@@ -94,9 +96,7 @@ namespace DallarBot.Commands
             }
 
             LogHandlerExtensions.LogUserAction(Context, "Successfully charged for mom Joke");
-
-            await Context.TriggerTypingAsync();
-            await Context.RespondAsync($"{Context.User.Mention}: {Program.YoMommaJokes.GetRandomYoMommaJoke()}");
+            await Context.RespondAsync($"{Context.User.Mention}: {Joke}");
         }
 
         [Command("giveafuck")]

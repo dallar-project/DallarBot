@@ -63,13 +63,13 @@ namespace BotWebTest.Models
         {
             DallarAccount acc = new DallarAccount();
 
-            if (forceProvider == "Discord")
+            if (forceProvider.Equals("Discord", StringComparison.InvariantCultureIgnoreCase))
             {
                 acc.AccountId = DiscordAccountId;
                 acc.AccountPrefix = "";
                 return acc;
             }
-            else if (forceProvider == "Twitch")
+            else if (forceProvider.Equals("Twitch", StringComparison.InvariantCultureIgnoreCase))
             {
                 acc.AccountId = TwitchAccountId;
                 acc.AccountPrefix = "twitch_";

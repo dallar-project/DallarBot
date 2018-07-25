@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DallarBot.Classes;
 using Dallar;
 using DallarBot.Services;
+using Dallar.Services;
 
 namespace DallarBot.Commands
 {
@@ -18,8 +19,10 @@ namespace DallarBot.Commands
         {
             await Context.TriggerTypingAsync();
 
-            int BlockCount = Program.DaemonClient.GetBlockCount();
-            float Difficulty = Program.DaemonClient.GetDifficulty();
+            IDallarClientService DallarClientService = Context.Services.GetService(typeof(IDallarClientService)) as IDallarClientService;
+
+            uint BlockCount = DallarClientService.GetBlockCount();
+            decimal Difficulty = DallarClientService.GetDifficulty();
 
             LogHandlerExtensions.LogUserAction(Context, $"Fetched block details. {BlockCount} with difficulty {Difficulty}.");
             await Context.RespondAsync($"{Context.User.Mention}: Difficulty for block {BlockCount}: {Difficulty}");

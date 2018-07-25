@@ -13,12 +13,6 @@ namespace Dallar
         public string AccountPrefix { get; set; }
     }
 
-    public class DallarSettings
-    {
-        public decimal Txfee { get; set; } = 0.0002M;
-        public string FeeAccount { get; set; } = "txaccount";
-    }
-
     public class DiscordBotSettings
     {
         public string ClientId { get; set; }
@@ -45,7 +39,6 @@ namespace Dallar
     public interface IDallarSettingsCollection
     {
         DaemonSettings Daemon { get; set; }
-        DallarSettings Dallar { get; set; }
         DiscordBotSettings Discord { get; set; }
         TwitchAuthSettings TwitchAuth { get; set; }
         TwitchBotSettings TwitchBot { get; set; }
@@ -54,7 +47,6 @@ namespace Dallar
     public class DallarSettingsCollection : IDallarSettingsCollection
     {
         public DaemonSettings Daemon { get; set; }
-        public DallarSettings Dallar { get; set; }
         public DiscordBotSettings Discord { get; set; }
         public TwitchAuthSettings TwitchAuth { get; set; }
         public TwitchBotSettings TwitchBot { get; set; }

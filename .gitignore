@@ -1,40 +1,15 @@
-
-DallarBot/bin
-
-
-DallarBot/obj
-
-
 DallarBot/.vs
-
 /.vs
 
-
-DallarBot/settings.json
+*/settings.json
 
 log.txt
-
-DallarDaemonClient/bin/
-
-DallarDaemonClient/obj/
-
-TwitchBot/bin/
-
-TwitchBot/obj/
-
-DallarSettings/bin/
-
-DallarSettings/obj/
-
 settings.json
 
-BotWeb/bin/
+*/bin/
 
-BotWeb/obj/
+*/obj/
 
-BotWebTest/bin/
-
-BotWebTest/obj/
 
 BotWebTest/node_modules/
 

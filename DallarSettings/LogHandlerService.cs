@@ -5,6 +5,9 @@ using System.IO;
 
 namespace Dallar
 {
+    // @TODO: This should use a better system than simply logging to a file
+    // Due to the numerous things we're logging, sometimes we get hit with a 'file in use' during a log
+    // which throws an exception D:. We really need a better form of logging.
     public class LogHandlerService
     {
         public LogHandlerService()

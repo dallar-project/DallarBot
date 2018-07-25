@@ -12,7 +12,15 @@ namespace DallarBot.Services
         {
             string output = $"[{DateTime.Now.ToString()}] Log: [DISCORD][{e.Level}]: {e.Message}";
             Debug.WriteLine(output);
-            System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", output + Environment.NewLine);
+            try
+            {
+                System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", output + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR: Failed to log: {output}: {ex.Message}");
+            }
+            
         }
 
         public static void LogUserAction(CommandContext Context, string log)

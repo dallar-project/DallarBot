@@ -9,6 +9,8 @@ using BotWebTest.Data;
 using BotWebTest.Models;
 using Dallar;
 using Dallar.Bots;
+using Dallar.Services;
+using Dallar.Exchange;
 
 namespace BotWebTest
 {
@@ -73,6 +75,10 @@ namespace BotWebTest
 
             IDallarSettingsCollection SettingsCollection = DallarSettingsCollection.FromConfig();
             services.AddSingleton<IDallarSettingsCollection>(SettingsCollection);
+
+            services.AddSingleton<IDallarClientService, DallarClientService>();
+            services.AddSingleton<IFunServiceCollection, FunServiceCollection>();
+            services.AddSingleton<IDallarPriceProviderService, DigitalPriceExchangeService>();
 
             services.AddTwitchBot();
 

@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Dallar.Exchange;
+using Dallar.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net;
 using TwitchLib.Client;
@@ -24,8 +26,6 @@ namespace Dallar.Bots
 
     public interface ITwitchBot
     {
-        DaemonClient DaemonClient { get; }
-
         void AttemptJoinChannel(string channel);
         void AttemptLeaveChannel(string channel);
 
@@ -36,8 +36,8 @@ namespace Dallar.Bots
 
     public class TwitchBot : ITwitchBot
     {
-        static DigitalPriceExchangeService DigitalPriceExchange;
-        protected static DaemonClient _DaemonClient;
+        protected IDallarClientService DallarClientService;
+        protected IDallarPriceProviderService DallarPriceProviderService; 
         TwitchClient client;
 
         protected IDallarSettingsCollection SettingsCollection;
@@ -45,15 +45,14 @@ namespace Dallar.Bots
 
         public event EventHandler<OnConnectionStatusChangedEventArgs> OnConnectionStatusChanged;
 
-        public TwitchBot(IDallarSettingsCollection DallarSettingsCollection)
+        public TwitchBot(IDallarSettingsCollection DallarSettingsCollection, IDallarClientService DallarClientService, IDallarPriceProviderService DallarPriceProviderService)
         {
             SettingsCollection = DallarSettingsCollection;
+            this.DallarClientService = DallarClientService;
 
             ConnectionCredentials credentials = new ConnectionCredentials(SettingsCollection.TwitchBot.Username, SettingsCollection.TwitchBot.AccessToken);
 
-            DigitalPriceExchange = new DigitalPriceExchangeService();
-
-            _DaemonClient = new DaemonClient(SettingsCollection.Daemon.IpAddress + ":" + SettingsCollection.Daemon.Port, SettingsCollection.Daemon.Username, SettingsCollection.Daemon.Password, SettingsCollection.Dallar.Txfee, new DallarAccount() { AccountId = SettingsCollection.Dallar.FeeAccount });
+            this.DallarPriceProviderService = DallarPriceProviderService;
 
             client = new TwitchClient();
             client.Initialize(credentials, null, 'd', 'd');
@@ -64,11 +63,6 @@ namespace Dallar.Bots
             client.OnChatCommandReceived += onCommandReceived;
 
             client.Connect();
-        }
-
-        public DaemonClient DaemonClient
-        {
-            get { return _DaemonClient; }
         }
 
         public void SetAccountOverrider(IDallarAccountOverrider DallarAccountOverrider)
@@ -138,53 +132,38 @@ namespace Dallar.Bots
         private void CheckBalance(OnChatCommandReceivedArgs e)
         {
             bool bDisplayUSD = false;
-            if (DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+            if (DallarPriceProviderService.GetPriceInfo(out DallarPriceInfo PriceInfo, out bool bPriceStale))
             {
                 bDisplayUSD = true;
             }
 
-            DallarAccount account = GetChatCommandAccount(e);
-            if (_DaemonClient.GetWalletAddressFromAccount(true, ref account))
+            DallarAccount Account = GetChatCommandAccount(e);
+            decimal balance = DallarClientService.GetAccountBalance(Account);
+            decimal pendingBalance = DallarClientService.GetAccountPendingBalance(Account);
+
+            string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
+            string resultStr = $"@{e.Command.ChatMessage.DisplayName}: Your balance is {balance} DAL";
+            if (bDisplayUSD)
             {
-                decimal balance = _DaemonClient.GetRawAccountBalance(account);
-                decimal pendingBalance = _DaemonClient.GetUnconfirmedAccountBalance(account);
-
-                string pendingBalanceStr = pendingBalance != 0 ? $" with {pendingBalance} DAL Pending" : "";
-                string resultStr = $"@{e.Command.ChatMessage.DisplayName}: Your balance is {balance} DAL";
-                if (bDisplayUSD)
-                {
-                    resultStr += $" (${decimal.Round(balance * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD){pendingBalanceStr}";
-                }
-                else
-                {
-                    resultStr += pendingBalanceStr;
-                }
-
-                //LogHandlerExtensions.LogUserAction(Context, $"Checked balance. {balance} DAL with {pendingBalance} DAL pending.");
-                client.SendMessage(e.Command.ChatMessage.Channel, resultStr);
+                resultStr += $" (${decimal.Round(balance * PriceInfo.PriceInUSD, 4)} USD){pendingBalanceStr}";
             }
             else
             {
-                //LogHandlerExtensions.LogUserAction(Context, $"Failed to check balance. Getting wallet address failed.");
-                client.SendMessage(e.Command.ChatMessage.Channel, $"@{e.Command.ChatMessage.DisplayName}: Failed to check balance. Getting wallet address failed. Please contact an Administrator.");
+                resultStr += pendingBalanceStr;
             }
+
+            client.SendMessage(e.Command.ChatMessage.Channel, resultStr);
         }
 
         public void GetDallarDeposit(OnChatCommandReceivedArgs e)
         {
-            DallarAccount account = GetChatCommandAccount(e);
-            if (_DaemonClient.GetWalletAddressFromAccount(true, ref account))
+            DallarAccount Account = GetChatCommandAccount(e);
+            if (!DallarClientService.ResolveDallarAccountAddress(ref Account))
             {
-                string resultStr = $"Your deposit address is {account.KnownAddress}. For help or more information, please visit http://dallar.tv/help";
-                client.SendWhisper(e.Command.ChatMessage.Username, resultStr);
-            }
-            else
-            {
-                //await DiscordHelpers.RespondAsDM(Context, $"{Context.User.Mention}: Failed to fetch your wallet address. Please contact an Administrator.");
-                //LogHandlerExtensions.LogUserAction(Context, $"Failed to fetch deposit info.");
+                Console.WriteLine("ERROR: Failed to resolve Dallar account?");
             }
 
-            //DiscordHelpers.DeleteNonPrivateMessage(Context);
+            client.SendWhisper(e.Command.ChatMessage.Username, $"Your deposit address is {Account.KnownAddress}. For help or more information, please visit http://dallar.tv/help");
         }
     }
 }

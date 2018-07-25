@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DallarDaemonClient\DallarDaemonClient.csproj" />
+    <ProjectReference Include="..\DallarDaemonClient\DallarClientService.csproj" />
     <ProjectReference Include="..\DallarSettings\DallarCommon.csproj" />
   </ItemGroup>
 

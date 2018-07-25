@@ -1,4 +1,5 @@
 ﻿using Dallar;
+using Dallar.Services;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
@@ -194,11 +195,12 @@ namespace DallarBot.Classes
             var Interactivity = Context.Client.GetExtension<InteractivityExtension>();
             await Context.TriggerTypingAsync();
             DiscordMessage Msg = await Context.RespondAsync(Message);
-            await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":wastebasket:"));
-            ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "wastebasket" || x.Name == x.Name, Msg, Context.User);
 
             if (Context.Member != null)
             {
+                await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":wastebasket:"));
+                ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "wastebasket" || x.Name == x.Name, Msg, Context.User);
+
                 await Msg.DeleteAsync();
 
                 if (bDeleteCommandMessage)
@@ -229,8 +231,11 @@ namespace DallarBot.Classes
 
         public static async Task<bool> PromptUserToSpendDallarOnCommand(CommandContext Context, decimal Amount)
         {
+            IDallarClientService DallarClientService = Context.Services.GetService(typeof(IDallarClientService)) as IDallarClientService;
+            DallarAccount Account = DallarAccountFromDiscordUser(Context.User);
+
             // If user can't afford command, immediately fail
-            if (!DallarHelpers.CanUserAffordTransactionAmount(Context.User, Amount))
+            if (DallarClientService.GetAccountBalance(Account) < Amount)
             {
                 await PromptUserToDeleteMessage(Context, $"You can not afford the cost of the {Context.Command.Name} command. You need {Amount} Dallar.");
                 return false;
@@ -247,12 +252,19 @@ namespace DallarBot.Classes
 
         public static async Task<bool> AttemptChargeDallarForCommand(CommandContext Context, Decimal Amount)
         {
+            IDallarClientService DallarClientService = Context.Services.GetService(typeof(IDallarClientService)) as IDallarClientService;
+            DallarAccount Account = DallarAccountFromDiscordUser(Context.User);
+
             if (!await PromptUserToSpendDallarOnCommand(Context, Amount))
             {
                 return false;
             }
 
-            if (!DallarHelpers.UserPayAmountToFeeAccount(Context.User, Amount))
+            DallarAccount FeeAccount = new DallarAccount() {
+                AccountId = "Dallar Bot Account"
+            };
+
+            if (!DallarClientService.MoveFromAccountToAccount(Account, FeeAccount, Amount))
             {
                 return false;
             }

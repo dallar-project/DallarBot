@@ -9,6 +9,7 @@ using Dallar.Bots;
 using Dallar;
 using BotWebTest.Extensions;
 using System.Linq;
+using Dallar.Services;
 
 namespace BotWebTest.Controllers
 {
@@ -18,20 +19,20 @@ namespace BotWebTest.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IDallarSettingsCollection _settingsCollection;
+        private readonly IDallarClientService DallarClientService;
         private readonly ILogger _logger;
         private readonly ITwitchBot _twitchBot;
 
         public DashboardController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IDallarSettingsCollection settingsCollection,
+            IDallarClientService DallarClientService,
             ILogger<DashboardController> logger,
             ITwitchBot twitchBot)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _settingsCollection = settingsCollection;
+            this.DallarClientService = DallarClientService;
             _logger = logger;
             _twitchBot = twitchBot;
         }
@@ -45,84 +46,73 @@ namespace BotWebTest.Controllers
             if (_signInManager.IsSignedIn(User))
             {
                 ApplicationUser user = await _userManager.GetUserAsync(HttpContext.User);
-                DallarAccount DallarAccount = user.DallarAccount();
+                
+                ViewData["ShowDiscordWallet"] = false;
+                ViewData["ShowTwitchWallet"] = false;
+                ViewData["IsDiscordLinked"] = false;
+                ViewData["IsTwitchLinked"] = false;
+                ViewData["HasDiscordDallar"] = false;
+                ViewData["HasTwitchDallar"] = false;
 
-                if (_twitchBot.DaemonClient.GetWalletAddressFromAccount(true, ref DallarAccount))
+                if (!string.IsNullOrEmpty(user.DiscordAccountId))
                 {
-                    ViewData["ShowDiscordWallet"] = false;
-                    ViewData["ShowTwitchWallet"] = false;
-                    ViewData["IsDiscordLinked"] = false;
-                    ViewData["IsTwitchLinked"] = false;
-                    ViewData["HasDiscordDallar"] = false;
-                    ViewData["HasTwitchDallar"] = false;
+                    DallarAccount DallarAccount = user.DallarAccount("Discord");
 
-                    if (!string.IsNullOrEmpty(user.DiscordAccountId))
+                    ViewData["ShowDiscordWallet"] = true;
+                    ViewData["IsDiscordLinked"] = true;
+
+                    decimal balance = DallarClientService.GetAccountBalance(DallarAccount);
+                    decimal pendingBalance = DallarClientService.GetAccountPendingBalance(DallarAccount);
+
+                    ViewData["DiscordBalance"] = balance;
+                    ViewData["DiscordPendingBalance"] = pendingBalance;
+
+                    ViewData["HasDiscordDallar"] = (balance > 0);
+
+                    DallarClientService.ResolveDallarAccountAddress(ref DallarAccount);
+                    ViewData["DiscordDepositAddress"] = DallarAccount.KnownAddress;
+
+                    ViewData["WithdrawBalance"] = balance;
+                }
+
+                if (!string.IsNullOrEmpty(user.TwitchAccountId))
+                {
+                    DallarAccount TwitchAccount = user.DallarAccount("Twitch");
+
+                    ViewData["ShowTwitchWallet"] = ((bool)ViewData["ShowDiscordWallet"] == false);
+                    ViewData["IsTwitchLinked"] = true;
+
+                    decimal balance = DallarClientService.GetAccountBalance(TwitchAccount);
+                    decimal pendingBalance = DallarClientService.GetAccountPendingBalance(TwitchAccount);
+
+                    ViewData["TwitchBalance"] = balance;
+                    ViewData["TwitchPendingBalance"] = pendingBalance;
+
+                    ViewData["HasTwitchDallar"] = (balance > 0);
+
+                    DallarClientService.ResolveDallarAccountAddress(ref TwitchAccount);
+                    ViewData["TwitchDepositAddress"] = TwitchAccount.KnownAddress;
+
+                    if((bool)ViewData["ShowDiscordWallet"] == false)
                     {
-                        ViewData["ShowDiscordWallet"] = true;
-                        ViewData["IsDiscordLinked"] = true;
-
-                        decimal balance = _twitchBot.DaemonClient.GetRawAccountBalance(DallarAccount);
-                        decimal pendingBalance = _twitchBot.DaemonClient.GetUnconfirmedAccountBalance(DallarAccount);
-
-                        ViewData["DiscordBalance"] = balance;
-                        ViewData["DiscordPendingBalance"] = pendingBalance;
-
-                        ViewData["HasDiscordDallar"] = (balance > 0);
-
-                        decimal txfee = _settingsCollection.Dallar.Txfee;
-                        decimal Amount = balance - txfee;
-                        ViewData["DiscordSpendable"] = Amount;
-
-                        ViewData["DiscordDepositAddress"] = DallarAccount.KnownAddress;
-
                         ViewData["WithdrawBalance"] = balance;
-                        ViewData["WithdrawSpendable"] = Amount;
-                    }
-
-                    if (!string.IsNullOrEmpty(user.TwitchAccountId))
-                    {
-                        ViewData["ShowTwitchWallet"] = ((bool)ViewData["ShowDiscordWallet"] == false);
-                        ViewData["IsTwitchLinked"] = true;
-
-                        decimal balance = _twitchBot.DaemonClient.GetRawAccountBalance(DallarAccount);
-                        decimal pendingBalance = _twitchBot.DaemonClient.GetUnconfirmedAccountBalance(DallarAccount);
-
-                        ViewData["TwitchBalance"] = balance;
-                        ViewData["TwitchPendingBalance"] = pendingBalance;
-
-                        ViewData["HasTwitchDallar"] = (balance > 0);
-
-                        decimal txfee = _settingsCollection.Dallar.Txfee;
-                        decimal Amount = balance - txfee;
-                        ViewData["TwitchSpendable"] = Amount;
-
-                        ViewData["TwitchDepositAddress"] = DallarAccount.KnownAddress;
-
-                        if((bool)ViewData["ShowDiscordWallet"] == false)
-                        {
-                            ViewData["WithdrawBalance"] = balance;
-                            ViewData["WithdrawSpendable"] = Amount;
-                        }
-                    }
-
-                    DallarWithdrawResultModel WithdrawInfo = TempData.Get<DallarWithdrawResultModel>("Withdraw");
-
-                    if (WithdrawInfo != null)
-                    {
-                        if (WithdrawInfo.bSuccess)
-                        {
-                            ViewData["WithdrawSuccess"] = $"You have successfully withdrawn {WithdrawInfo.Amount} DAL to address {WithdrawInfo.DallarAddress}!";
-                        }
-                        else
-                        {
-                            ViewData["WithdrawFailed"] = $"Failed to withdraw Dallar. Error: {WithdrawInfo.ErrorMessage}";
-                        }
                     }
                 }
-                else
+
+                DallarWithdrawResultModel WithdrawInfo = TempData.Get<DallarWithdrawResultModel>("Withdraw");
+
+                if (WithdrawInfo != null)
                 {
-                    // @TODO: Wallet error?
+                    if (WithdrawInfo.bSuccess)
+                    {
+                        ViewData["WithdrawSuccess"] = $"You have successfully withdrawn {WithdrawInfo.Amount} DAL to address {WithdrawInfo.DallarAddress}!";
+                    }
+                    else
+                    {
+                        ViewData["WithdrawFailed"] = $"Failed to withdraw Dallar. Error: {WithdrawInfo.ErrorMessage}";
+                    }
                 }
+
 
                 ViewData["AddedToChannel"] = user.AddedToTwitchChannel;                
 
@@ -179,7 +169,7 @@ namespace BotWebTest.Controllers
             DallarAccount WithdrawAccount = new DallarAccount();
 
             // Invalid address?
-            if (!_twitchBot.DaemonClient.IsAddressValid(DallarWithdrawData.DallarAddress))
+            if (!DallarClientService.IsAddressValid(DallarWithdrawData.DallarAddress))
             {
                 TempData.Put("Withdraw", new DallarWithdrawResultModel()
                 {
@@ -205,7 +195,7 @@ namespace BotWebTest.Controllers
             }
 
             // Can't afford transaction?
-            if (!_twitchBot.DaemonClient.CanAccountAffordTransaction(DallarAccount, DallarWithdrawData.Amount))
+            if (!DallarClientService.CanAffordTransaction(DallarAccount, WithdrawAccount, DallarWithdrawData.Amount, true, out decimal TransactionFee))
             {
                 // @TODO: Getting wallet failed?
                 TempData.Put("Withdraw", new DallarWithdrawResultModel()
@@ -218,45 +208,32 @@ namespace BotWebTest.Controllers
             }
 
             // Amount should be guaranteed a good value to withdraw
-            // Fetch user's wallet
-            if (_twitchBot.DaemonClient.GetWalletAddressFromAccount(true, ref DallarAccount))
+
+            if (DallarClientService.SendFromAccountToAccount(DallarAccount, WithdrawAccount, DallarWithdrawData.Amount, true, out _))
             {
-                if (_twitchBot.DaemonClient.SendMinusFees(DallarAccount, WithdrawAccount, DallarWithdrawData.Amount, true))
+                // Successfully withdrew
+                TempData.Put("Withdraw", new DallarWithdrawResultModel()
                 {
-                    // Successfully withdrew
-                    TempData.Put("Withdraw", new DallarWithdrawResultModel()
-                    {
-                        bSuccess = true,
-                        DallarAddress = DallarWithdrawData.DallarAddress,
-                        Amount = DallarWithdrawData.Amount
-                    });
+                    bSuccess = true,
+                    DallarAddress = DallarWithdrawData.DallarAddress,
+                    Amount = DallarWithdrawData.Amount
+                });
 
-                    _logger.LogInformation($"{user.UserName} ({DallarAccount.UniqueAccountName}): Successfully withdrew {DallarWithdrawData.Amount} from wallet ({DallarAccount}) to {WithdrawAccount.KnownAddress}.");
-                    return RedirectToAction(nameof(DashboardController.Index));
-                }
-                else
-                {
-                    // Daemon send failed?
-                    TempData.Put("Withdraw", new DallarWithdrawResultModel()
-                    {
-                        bSuccess = false,
-                        ErrorMessage = "The Dallar Wallet Service was unable to withdraw your requested amount. Maybe you can no longer afford it?"
-                    });
-
-                    return RedirectToAction(nameof(DashboardController.Index));
-                }
+                _logger.LogInformation($"{user.UserName} ({DallarAccount.UniqueAccountName}): Successfully withdrew {DallarWithdrawData.Amount} from wallet ({DallarAccount}) to {WithdrawAccount.KnownAddress}.");
+                return RedirectToAction(nameof(DashboardController.Index));
             }
             else
             {
-                // @TODO: Getting wallet failed?
+                // Daemon send failed?
                 TempData.Put("Withdraw", new DallarWithdrawResultModel()
                 {
                     bSuccess = false,
-                    ErrorMessage = "The Dallar Wallet Service was unable to retrieve your wallet. Please contact support in our Discord."
+                    ErrorMessage = "The Dallar Wallet Service was unable to withdraw your requested amount. Maybe you can no longer afford it?"
                 });
 
                 return RedirectToAction(nameof(DashboardController.Index));
             }
+
         }
 
         [HttpPost]
@@ -330,11 +307,8 @@ namespace BotWebTest.Controllers
                                 userResult = await _userManager.AddLoginAsync(user, info);
                                 if (userResult.Succeeded)
                                 {
-                                    decimal bal = _twitchBot.DaemonClient.GetRawAccountBalance(user.DallarAccount("Twitch"));
-                                    if (bal - _twitchBot.DaemonClient.txFee > 0)
-                                    {
-                                        _twitchBot.DaemonClient.SendMinusFees(user.DallarAccount("Twitch"), user.DallarAccount("Discord"), bal - _twitchBot.DaemonClient.txFee, true);
-                                    }
+                                    DallarAccount TwitchAccount = user.DallarAccount("Twitch");
+                                    DallarClientService.MoveFromAccountToAccount(TwitchAccount, user.DallarAccount("Discord"), DallarClientService.GetAccountBalance(TwitchAccount));
 
                                     await _signInManager.SignInAsync(user, isPersistent: false);
                                     _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
@@ -370,11 +344,8 @@ namespace BotWebTest.Controllers
                                 userResult = await _userManager.AddLoginAsync(user, info);
                                 if (userResult.Succeeded)
                                 {
-                                    decimal bal = _twitchBot.DaemonClient.GetRawAccountBalance(user.DallarAccount("Twitch"));
-                                    if (bal - _twitchBot.DaemonClient.txFee > 0)
-                                    {
-                                        _twitchBot.DaemonClient.SendMinusFees(user.DallarAccount("Twitch"), user.DallarAccount("Discord"), bal - _twitchBot.DaemonClient.txFee, true);
-                                    }
+                                    DallarAccount TwitchAccount = user.DallarAccount("Twitch");
+                                    DallarClientService.MoveFromAccountToAccount(TwitchAccount, user.DallarAccount("Discord"), DallarClientService.GetAccountBalance(TwitchAccount));
 
                                     await _signInManager.SignInAsync(user, isPersistent: false);
                                     _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
@@ -460,6 +431,10 @@ namespace BotWebTest.Controllers
                     var userResult = await _userManager.UpdateAsync(user);
                     if (userResult.Succeeded)
                     {
+                        DallarAccount TwitchAccount = user.DallarAccount("Twitch");
+                        decimal balance = DallarClientService.GetAccountBalance(TwitchAccount);
+                        DallarClientService.MoveFromAccountToAccount(user.DallarAccount("Twitch"), user.DallarAccount("Discord"), balance);
+
                         userResult = await _userManager.AddLoginAsync(user, info);
                         if (userResult.Succeeded)
                         {
