@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DallarDaemonClient\DallarClientService.csproj" />
+    <ProjectReference Include="..\DallarFunServices\DallarFunServices.csproj" />
     <ProjectReference Include="..\DallarSettings\DallarCommon.csproj" />
   </ItemGroup>
 

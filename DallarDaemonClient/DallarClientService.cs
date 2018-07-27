@@ -172,7 +172,18 @@ namespace Dallar.Services
             }
 
             Amount = 0m;
-            return decimal.TryParse(AmountStr, out Amount);
+            if (!decimal.TryParse(AmountStr, out Amount))
+            {
+                return false;
+            }
+
+            Amount = Math.Max(0, Amount);
+            if (Amount == 0)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

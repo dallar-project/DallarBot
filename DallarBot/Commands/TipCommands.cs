@@ -130,7 +130,7 @@ namespace DallarBot.Commands
             }
 
             // Verify user has requested balance to withdraw
-            if (!DallarClientService.CanAffordTransaction(Account, Account, Amount, true, out decimal TransactionFee))
+            if (!DallarClientService.CanAffordTransaction(Account, WithdrawAccount, Amount, true, out decimal TransactionFee))
             {
                 // user can not afford requested withdraw amount
                 LogHandlerExtensions.LogUserAction(Context, $"Tried to withdraw {Amount} but has insufficient funds. ({DallarClientService.GetAccountBalance(Account)} DAL)");
