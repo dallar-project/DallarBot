@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DallarBot\DallarBot.csproj" />
+    <ProjectReference Include="..\DallarBot\DiscordBot.csproj" />
     <ProjectReference Include="..\DallarDaemonClient\DallarClientService.csproj" />
     <ProjectReference Include="..\DallarFunServices\DallarFunServices.csproj" />
     <ProjectReference Include="..\DallarSettings\DallarCommon.csproj" />
