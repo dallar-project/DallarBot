@@ -79,13 +79,18 @@ namespace DallarBot.Classes
             return false;
         }
 
-        public static DallarAccount DallarAccountFromDiscordUser(DiscordUser User)
+        public static DallarAccount DallarAccountFromDiscordUser(CommandContext Context, DiscordUser User)
         {
-            return new DallarAccount()
+            var acc = new DallarAccount()
             {
                 AccountId = User.Id.ToString(),
                 AccountPrefix = "" // @TODO: Make config driven
             };
+
+            IDallarAccountOverrider AccountOverrider = Context.Services.GetService(typeof(IDallarAccountOverrider)) as IDallarAccountOverrider;
+            AccountOverrider?.OverrideDallarAccountIfNeeded(ref acc);
+
+            return acc;
         }
 
         public static void DeleteNonPrivateMessage(CommandContext Context)
@@ -170,7 +175,7 @@ namespace DallarBot.Classes
 
         public static async Task<bool> PromptUserToConfirm(CommandContext Context, string PromptMessage, bool bDeleteOnComplete = true)
         {
-            var Interactivity = Context.Client.GetExtension<InteractivityExtension>();
+            var Interactivity = Context.Client.GetInteractivity();
             await Context.TriggerTypingAsync();
             DiscordMessage Msg = await Context.RespondAsync(PromptMessage);
             await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":white_check_mark:"));
@@ -192,7 +197,7 @@ namespace DallarBot.Classes
 
         public static async Task PromptUserToDeleteMessage(CommandContext Context, string Message, bool bDeleteCommandMessage = true)
         {
-            var Interactivity = Context.Client.GetExtension<InteractivityExtension>();
+            var Interactivity = Context.Client.GetInteractivity();
             await Context.TriggerTypingAsync();
             DiscordMessage Msg = await Context.RespondAsync(Message);
 
@@ -212,7 +217,7 @@ namespace DallarBot.Classes
 
         public static async Task PromptUserToDeleteMessage(CommandContext Context, DiscordEmbed Embed, bool bDeleteCommandMessage = true)
         {
-            var Interactivity = Context.Client.GetExtension<InteractivityExtension>();
+            var Interactivity = Context.Client.GetInteractivity();
             await Context.TriggerTypingAsync();
             DiscordMessage Msg = await Context.RespondAsync(embed: Embed);
             await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":wastebasket:"));
@@ -232,7 +237,7 @@ namespace DallarBot.Classes
         public static async Task<bool> PromptUserToSpendDallarOnCommand(CommandContext Context, decimal Amount)
         {
             IDallarClientService DallarClientService = Context.Services.GetService(typeof(IDallarClientService)) as IDallarClientService;
-            DallarAccount Account = DallarAccountFromDiscordUser(Context.User);
+            DallarAccount Account = DallarAccountFromDiscordUser(Context, Context.User);
 
             // If user can't afford command, immediately fail
             if (DallarClientService.GetAccountBalance(Account) < Amount)
@@ -253,7 +258,7 @@ namespace DallarBot.Classes
         public static async Task<bool> AttemptChargeDallarForCommand(CommandContext Context, Decimal Amount)
         {
             IDallarClientService DallarClientService = Context.Services.GetService(typeof(IDallarClientService)) as IDallarClientService;
-            DallarAccount Account = DallarAccountFromDiscordUser(Context.User);
+            DallarAccount Account = DallarAccountFromDiscordUser(Context, Context.User);
 
             if (!await PromptUserToSpendDallarOnCommand(Context, Amount))
             {

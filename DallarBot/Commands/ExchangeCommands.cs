@@ -36,7 +36,7 @@ namespace DallarBot.Commands
 
             await Context.TriggerTypingAsync();            
 
-            var Info = String.Format("{0:#,##0.00000000}", Amount) + " USD is " + String.Format("{0:#,##0.00000000}", decimal.Round(ParsedAmount / PriceInfo.PriceInUSD, 8)) + " DAL.";
+            var Info = String.Format("{0:#,##0.0#######}", ParsedAmount) + " USD is " + String.Format("{0:#,##0.0#######}", decimal.Round(ParsedAmount / PriceInfo.PriceInUSD, 8)) + " DAL.";
             if (bPriceStale)
             {
                 Info += "\n:warning: Info potentially out of date due to Exchange API lag.";

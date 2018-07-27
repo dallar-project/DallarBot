@@ -33,7 +33,7 @@ namespace DallarBot.Commands
                 bDisplayUSD = true;
             }
 
-            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context, Context.User);
 
             decimal balance = DallarClientService.GetAccountBalance(Account);
             decimal pendingBalance = DallarClientService.GetAccountPendingBalance(Account);
@@ -63,7 +63,7 @@ namespace DallarBot.Commands
         {
             IDallarClientService DallarClientService = Context.Services.GetService(typeof(IDallarClientService)) as IDallarClientService;
 
-            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context, Context.User);
             if (DallarClientService.ResolveDallarAccountAddress(ref Account))
             {
                 DiscordEmbedBuilder EmbedBuilder = new DiscordEmbedBuilder();
@@ -111,7 +111,7 @@ namespace DallarBot.Commands
                 KnownAddress = PublicAddress
             };
 
-            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context, Context.User);
             // Try to interpret the user's amount input as a sane value
             if (!DallarClientService.TryParseAmountString(Account, AmountStr, false, out decimal Amount))
             {
@@ -234,7 +234,7 @@ namespace DallarBot.Commands
                 return;
             }
 
-            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context.User);
+            DallarAccount Account = DiscordHelpers.DallarAccountFromDiscordUser(Context, Context.User);
             if (!DallarClientService.TryParseAmountString(Account, AmountStr, false, out decimal Amount))
             {
                 LogHandlerExtensions.LogUserAction(Context, $"Tried to send Dallar but could not parse amount: {AmountStr}");
@@ -266,7 +266,7 @@ namespace DallarBot.Commands
                 return;
             }
 
-            DallarAccount ToAccount = DiscordHelpers.DallarAccountFromDiscordUser(Member);
+            DallarAccount ToAccount = DiscordHelpers.DallarAccountFromDiscordUser(Context, Member);
 
             // Were we able to successfully send the transaction?
             if (DallarClientService.MoveFromAccountToAccount(Account, ToAccount, Amount))
@@ -283,7 +283,7 @@ namespace DallarBot.Commands
 
                 if (bDisplayUSD)
                 {
-                    ReplyStr += $" {decimal.Round(Amount * PriceInfo.PriceInUSD, 4)} USD)";
+                    ReplyStr += $" (${decimal.Round(Amount * PriceInfo.PriceInUSD, 4)} USD)";
                 }
 
                 await Context.RespondAsync(ReplyStr);

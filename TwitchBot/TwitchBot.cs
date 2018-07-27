@@ -88,8 +88,6 @@ namespace Dallar.Bots
         void AttemptJoinChannel(string channel);
         void AttemptLeaveChannel(string channel);
 
-        void SetAccountOverrider(IDallarAccountOverrider DallarAccountOverrider);
-
         event EventHandler<OnConnectionStatusChangedEventArgs> OnConnectionStatusChanged;
 
         void SendChannelMessage(string channel, string message);
@@ -121,7 +119,7 @@ namespace Dallar.Bots
 
         public event EventHandler<OnConnectionStatusChangedEventArgs> OnConnectionStatusChanged;
 
-        public TwitchBot(IDallarSettingsCollection DallarSettingsCollection, IDallarClientService DallarClientService, IFunServiceCollection FunServiceCollection, IDallarPriceProviderService DallarPriceProviderService)
+        public TwitchBot(IDallarSettingsCollection DallarSettingsCollection, IDallarClientService DallarClientService, IFunServiceCollection FunServiceCollection, IDallarPriceProviderService DallarPriceProviderService, IDallarAccountOverrider AccountOverrider)
         {
             SettingsCollection = DallarSettingsCollection;
             this.DallarClientService = DallarClientService;
@@ -130,6 +128,7 @@ namespace Dallar.Bots
 
             this.DallarPriceProviderService = DallarPriceProviderService;
             this.FunServiceCollection = FunServiceCollection;
+            this.AccountOverrider = AccountOverrider;
 
             var authResponse = HttpClient.PostAsync($"https://id.twitch.tv/oauth2/token?client_id={SettingsCollection.TwitchAuth.ClientId}&client_secret={SettingsCollection.TwitchAuth.ClientSecret}&grant_type=client_credentials", null).GetAwaiter().GetResult();
             var responseString = JObject.Parse(authResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult());
@@ -275,7 +274,7 @@ namespace Dallar.Bots
             }
             else if (!string.IsNullOrEmpty(TwitchUserAccountContext.CurrentChannel))
             {
-                SendChannelMessage(TwitchUserAccountContext.Username, Message);
+                SendChannelMessage(TwitchUserAccountContext.CurrentChannel, Message);
             }
         }
 

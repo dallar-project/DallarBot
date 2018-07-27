@@ -9,53 +9,67 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Dallar.Bots
 {
-    public class DiscordBot
+    public static class ServiceCollectionExtensions
+    {
+        public static IServiceCollection AddDiscordBot(
+            this IServiceCollection services)
+        {
+            services.AddSingleton<IDiscordBot, DiscordBot>();
+            return services;
+        }
+    }
+
+    public interface IDiscordBot
+    {
+        
+    }
+
+    public class DiscordBot : IDiscordBot
     {
         static DiscordShardedClient DiscordClient;
-        public static DallarSettingsCollection SettingsCollection;
-        public static RandomManagerService RandomManager;
 
         protected IDallarSettingsCollection DallarSettingsCollection;
         protected IDallarPriceProviderService DallarPriceProviderService;
         protected IDallarClientService DallarClientService;
         protected IFunServiceCollection FunServiceCollection;
+        protected IRandomManagerService RandomManagerService;
+        protected IDallarAccountOverrider DallarAccountOverrider;
 
-        public DiscordBot(IDallarSettingsCollection DallarSettingsCollection, IDallarClientService DallarClientService, IDallarPriceProviderService DallarPriceProviderService, IFunServiceCollection FunServiceCollection)
+        protected IServiceProvider CommandServiceProvider;
+
+        public DiscordBot(IDallarSettingsCollection DallarSettingsCollection, IDallarClientService DallarClientService, IDallarPriceProviderService DallarPriceProviderService, IFunServiceCollection FunServiceCollection, IRandomManagerService RandomManagerService, IDallarAccountOverrider AccountOverrider)
         {
             this.DallarSettingsCollection = DallarSettingsCollection;
             this.DallarClientService = DallarClientService;
             this.DallarPriceProviderService = DallarPriceProviderService;
             this.FunServiceCollection = FunServiceCollection;
+            this.RandomManagerService = RandomManagerService;
+            this.DallarAccountOverrider = AccountOverrider;
 
-            RandomManager = new RandomManagerService();
-
-            Console.WriteLine(LogHandlerService.CenterString("▒█▀▀▄ █▀▀█ █░░ █░░ █▀▀█ █▀▀█ ▒█▀▀█ █▀▀█ ▀▀█▀▀ "));
-            Console.WriteLine(LogHandlerService.CenterString("▒█░▒█ █▄▄█ █░░ █░░ █▄▄█ █▄▄▀ ▒█▀▀▄ █░░█ ░░█░░ "));
-            Console.WriteLine(LogHandlerService.CenterString("▒█▄▄▀ ▀░░▀ ▀▀▀ ▀▀▀ ▀░░▀ ▀░▀▀ ▒█▄▄█ ▀▀▀▀ ░░▀░░ "));
-
-            Console.WriteLine();
-            Console.WriteLine(LogHandlerService.CenterString("----------------------------"));
-            Console.WriteLine();
-
-            Console.WriteLine(LogHandlerService.CenterString("Initialising bot..."));
+            Console.WriteLine("Initialising Discord bot...");
 
             DiscordClient = new DiscordShardedClient(new DiscordConfiguration
             {
-                Token = SettingsCollection.Discord.Token,
+                Token = DallarSettingsCollection.Discord.Token,
                 TokenType = TokenType.Bot,
                 LogLevel = LogLevel.Debug
             });
 
             DiscordClient.DebugLogger.LogMessageReceived += LogHandlerExtensions.DiscordLogMessageReceived;
 
-            DiscordClient.MessageCreated += async e =>
-            {
-                if (e.Message.Content.ToLower().StartsWith("ping"))
-                    await e.Message.RespondAsync("pong!");
-            };
+            CommandServiceProvider = new ServiceCollection()
+                .AddSingleton(this.DallarSettingsCollection)
+                .AddSingleton(this.DallarClientService)
+                .AddSingleton(this.DallarPriceProviderService)
+                .AddSingleton(this.FunServiceCollection)
+                .AddSingleton(this.RandomManagerService)
+                .AddSingleton(this.DallarAccountOverrider)
+                .BuildServiceProvider();
 
             StartUpBot();
         }
@@ -67,7 +81,8 @@ namespace Dallar.Bots
                 StringPrefixes = new string[] { "d!" },
                 EnableDms = true,
                 EnableMentionPrefix = true,
-                EnableDefaultHelp = false
+                EnableDefaultHelp = false,
+                Services = CommandServiceProvider
             });
 
             foreach (CommandsNextExtension CommandsModule in DiscordClient.GetCommandsNext().Values)
@@ -98,15 +113,34 @@ namespace Dallar.Bots
                     if (e.Context.Member != null)
                     {
                         Channel = await e.Context.Member.CreateDmChannelAsync();
+                        await e.Context.Message.DeleteAsync();
                     }
 
                     await e.Context.Client.GetCommandsNext().SudoAsync(e.Context.User, Channel, "d!help " + e.Command.Name);
-                    DiscordHelpers.DeleteNonPrivateMessage(e.Context);
                 };
             }
 
+            await DiscordClient.UseInteractivityAsync(new InteractivityConfiguration()
+            {
+                PaginationBehavior = TimeoutBehaviour.DeleteMessage,
+                PaginationTimeout = TimeSpan.FromSeconds(30),
+                Timeout = TimeSpan.FromSeconds(30)
+            });
+
             await DiscordClient.StartAsync();
             await Task.Delay(-1);
+        }
+
+        public DallarAccount DallarAccountFromDiscordUser(DiscordUser User)
+        {
+            var acc = new DallarAccount()
+            {
+                AccountId = User.Id.ToString(),
+                AccountPrefix = "" // @TODO: Make config driven
+            };
+
+            DallarAccountOverrider?.OverrideDallarAccountIfNeeded(ref acc);
+            return acc;
         }
     }
 }

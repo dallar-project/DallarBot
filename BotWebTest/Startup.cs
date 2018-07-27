@@ -12,6 +12,7 @@ using Dallar.Bots;
 using Dallar.Services;
 using Dallar.Exchange;
 using Microsoft.AspNetCore.HttpOverrides;
+using System;
 
 namespace BotWebTest
 {
@@ -26,11 +27,11 @@ namespace BotWebTest
 
         public class DallarAccountOverrider : IDallarAccountOverrider
         {
-            protected IApplicationBuilder _app;
-            public DallarAccountOverrider(IApplicationBuilder app)
+            public IApplicationBuilder _app { get; set; }
+            public DallarAccountOverrider()
             {
-                _app = app;
             }
+
 
             public bool OverrideDallarAccountIfNeeded(ref DallarAccount Account)
             {
@@ -43,7 +44,17 @@ namespace BotWebTest
                     //@TODO: Not hardcode these prefixes
                     if (Account.AccountPrefix == "twitch_")
                     {
-                        ApplicationUser accountUser = Manager.Users.First(x => x.TwitchAccountId == tempAccount.AccountId);
+                        ApplicationUser accountUser = null;
+
+                        try
+                        {
+                            accountUser = Manager.Users.First(x => x.TwitchAccountId == tempAccount.AccountId);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+
                         if (accountUser != null)
                         {
                             Account = accountUser.DallarAccount();
@@ -52,7 +63,17 @@ namespace BotWebTest
                     }
                     else if (Account.AccountPrefix == "")
                     {
-                        ApplicationUser accountUser = Manager.Users.First(x => x.DiscordAccountId == tempAccount.AccountId);
+                        ApplicationUser accountUser = null;
+
+                        try
+                        {
+                            accountUser = Manager.Users.First(x => x.DiscordAccountId == tempAccount.AccountId);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+
                         if (accountUser != null)
                         {
                             Account = accountUser.DallarAccount();
@@ -79,9 +100,12 @@ namespace BotWebTest
 
             services.AddSingleton<IDallarClientService, DallarClientService>();
             services.AddSingleton<IFunServiceCollection, FunServiceCollection>();
+            services.AddSingleton<IRandomManagerService, RandomManagerService>();
             services.AddSingleton<IDallarPriceProviderService, DigitalPriceExchangeService>();
+            services.AddSingleton<IDallarAccountOverrider, DallarAccountOverrider>();
 
             services.AddTwitchBot();
+            services.AddDiscordBot();
 
             services.AddAuthentication()
                 .AddTwitch(twitchOptions =>
@@ -133,6 +157,9 @@ namespace BotWebTest
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
+            DallarAccountOverrider AccountOverrider = app.ApplicationServices.GetService<IDallarAccountOverrider>() as DallarAccountOverrider;
+            AccountOverrider._app = app;
+           
             // Spin up the twitch bot and join all relevant channels
             ITwitchBot TwitchBot = app.ApplicationServices.GetService<ITwitchBot>();
             TwitchBot.OnConnectionStatusChanged += (o, s) =>
@@ -150,7 +177,9 @@ namespace BotWebTest
                     }
                 }
             };
-            TwitchBot.SetAccountOverrider(new DallarAccountOverrider(app));
+            
+            // Spin up the Discord bot
+            IDiscordBot DiscordBot = app.ApplicationServices.GetService<IDiscordBot>();
         }
     }
 }

@@ -12,23 +12,23 @@ namespace Dallar.Bots
     {
         protected void BalanceCommand(TwitchUserAccountContext InvokerTwitchAccount)
         {
-            DallarAccount Account = InvokerTwitchAccount.GetDallarAccount();
+           DallarAccount Account = InvokerTwitchAccount.GetDallarAccount();
             decimal bal = DallarClientService.GetAccountBalance(Account);
 
             string USD = "";
             if (DallarPriceProviderService.GetPriceInfo(out DallarPriceInfo DallarPriceInfo, out _))
             {
-                USD = $" (${bal * DallarPriceInfo.PriceInUSD} USD)";
+                USD = $" (${String.Format("{0:#,##0.00}", bal * DallarPriceInfo.PriceInUSD)} USD)";
             }
 
             decimal pending = DallarClientService.GetAccountPendingBalance(Account);
             string PendingStr = "";
             if (pending > 0)
             {
-                PendingStr = $" {pending} DAL pending.";
+                PendingStr = $" {String.Format("{0:#,##0.0#######}", pending)} DAL pending.";
             }
 
-            Reply(InvokerTwitchAccount, $"@{InvokerTwitchAccount.DisplayName} has {bal} Dallar.{USD}{PendingStr}");
+            Reply(InvokerTwitchAccount, $"@{InvokerTwitchAccount.DisplayName} has {String.Format("{0:#,##0.0#######}", bal)} Dallar.{USD}{PendingStr}");
         }
 
         protected void DepositCommand(TwitchUserAccountContext InvokerTwitchAccount)
@@ -81,7 +81,7 @@ namespace Dallar.Bots
             // Amount should be guaranteed a good value to withdraw
             if (DallarClientService.SendFromAccountToAccount(Account, WithdrawAccount, Amount, true, out string TxID))
             {
-                SendWhisper(InvokerTwitchAccount.Username, $"You have successfully withdrawn {Amount} DAL to address '{WithdrawAccount.KnownAddress}'.");
+                Reply(InvokerTwitchAccount, $"You have successfully withdrawn {String.Format("{0:#,##0.0#######}", Amount)} DAL" + (!InvokerTwitchAccount.IsFromWhisper ? "" : $" to address '{WithdrawAccount.KnownAddress}'."));
                 return;
             }
             else
@@ -150,7 +150,7 @@ namespace Dallar.Bots
                 USD = $" (${Amount * DallarPriceInfo.PriceInUSD} USD)";
             }
 
-            Reply(InvokerTwitchAccount, $"@{InvokerTwitchAccount.DisplayName} has sent @{Args[1]} {Amount} Dallar.{USD}");
+            Reply(InvokerTwitchAccount, $"@{InvokerTwitchAccount.DisplayName} has sent {Args[1]} {Amount} Dallar.{USD}");
         }
     }
 }

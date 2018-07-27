@@ -34,7 +34,7 @@ namespace DallarBot.Commands
                 return;
             }
 
-            if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context, 1))
+            if (!await DiscordHelpers.AttemptChargeDallarForCommand(Context,  1))
             {
                 LogHandlerExtensions.LogUserAction(Context, "Failed charged for dad Joke");
                 return;

@@ -14,11 +14,6 @@ namespace Dallar
         {
         }
 
-        public static string CenterString(string value)
-        {
-            return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
-        }
-
         public static void Log(string log)
         {
             Debug.WriteLine(log);
