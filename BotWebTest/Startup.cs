@@ -11,6 +11,7 @@ using Dallar;
 using Dallar.Bots;
 using Dallar.Services;
 using Dallar.Exchange;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace BotWebTest
 {
@@ -104,6 +105,12 @@ namespace BotWebTest
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseBrowserLink();
