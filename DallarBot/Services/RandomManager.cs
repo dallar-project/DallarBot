@@ -28,7 +28,7 @@ namespace DallarBot.Services
             webRequest.Method = "POST";
 
             JObject param = new JObject();
-            param["apiKey"] = "fbef3728-6fa6-41d3-bd3e-0df830160a2e";
+            param["apiKey"] = "eb30e56e-de45-43f3-b39c-1799da7a7b3a";
             param["n"] = 10;
             param["decimalPlaces"] = 7;
 

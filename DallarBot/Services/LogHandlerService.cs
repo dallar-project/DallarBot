@@ -13,22 +13,23 @@ namespace DallarBot.Services
         }
 
         // this method writes all of bot's log messages to debug output
-        public static void DiscordLogMessageReceived(object sender, DebugLogMessageEventArgs e)
-        {
-            string output = $"[{DateTime.Now.ToString()}] Log: [DISCORD][{e.Level}]: {e.Message}";
-            Debug.WriteLine(output);
-            try
-            {
-                System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", output + Environment.NewLine);
-            }
-            catch (Exception ex)
-            {
+        // public static void DiscordLogMessageReceived(object sender, DebugLogMessageEventArgs e)
+        // {
+        //     string output = $"[{DateTime.Now.ToString()}] Log: [DISCORD][{e.Level}]: {e.Message}";
+        //     Debug.WriteLine(output);
+        //     try
+        //     {
+        //         System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", output + Environment.NewLine);
+        //     }
+        //     catch (Exception ex)
+        //     {
 
-            }
-        }
+        //     }
+        // }
 
         public static string CenterString(string value)
         {
+            return value;
             return String.Format("{0," + ((Console.WindowWidth / 2) + ((value).Length / 2)) + "}", value);
         }
 
@@ -45,7 +46,7 @@ namespace DallarBot.Services
             {
                 System.IO.File.AppendAllText(Environment.CurrentDirectory + "/log.txt", log + Environment.NewLine);
             }
-            catch (Exception ex)
+            catch (Exception _ex)
             {
 
             }

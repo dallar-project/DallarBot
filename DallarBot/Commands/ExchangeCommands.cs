@@ -26,7 +26,7 @@ namespace DallarBot.Commands
             }
             await LogHandlerService.LogUserActionAsync(Context, $"Invoked USD command with amount {ParsedAmount}.");
 
-            if (!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+            if (true)//!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
             {
                 await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: It appears that Dallar Bot is unable to evaluate the price of Dallar at the moment. Perhaps an exchange is down?");
                 return;
@@ -34,8 +34,8 @@ namespace DallarBot.Commands
 
             await Context.TriggerTypingAsync();            
 
-            var Info = String.Format("{0:#,##0.00000000}", Amount) + " USD is " + String.Format("{0:#,##0.00000000}", decimal.Round(ParsedAmount / PriceInfo.USDValue.GetValueOrDefault(), 8)) + " DAL.";
-            if (bPriceStale)
+            var Info = "Error";//String.Format("{0:#,##0.00000000}", Amount) + " USD is " + String.Format("{0:#,##0.00000000}", decimal.Round(ParsedAmount / PriceInfo.USDValue.GetValueOrDefault(), 8)) + " DAL.";
+            if (true)//bPriceStale)
             {
                 Info += "\n:warning: Info potentially out of date due to Exchange API lag.";
             }
@@ -59,7 +59,7 @@ namespace DallarBot.Commands
 
             await LogHandlerService.LogUserActionAsync(Context, $"Invoked BTC command with amount {ParsedAmount}.");
 
-            if (!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+            if (true)//!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
             {
                 await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: It appears that Dallar Bot is unable to evaluate the price of Dallar at the moment. Perhaps an exchange is down?");
                 return;
@@ -67,8 +67,8 @@ namespace DallarBot.Commands
 
             await Context.TriggerTypingAsync();
 
-            var Info = String.Format("{0:#,##0.00000000}", ParsedAmount) + " BTC is " + String.Format("{0:#,##0.00000000}", decimal.Round(ParsedAmount / PriceInfo.Price, 8)) + " DAL.";
-            if (bPriceStale)
+            var Info = "error";//String.Format("{0:#,##0.00000000}", ParsedAmount) + " BTC is " + String.Format("{0:#,##0.00000000}", decimal.Round(ParsedAmount / PriceInfo.Price, 8)) + " DAL.";
+            if (true)//bPriceStale)
             {
                 Info += "\n:warning: Info potentially out of date due to Exchange API lag.";
             }
@@ -94,28 +94,28 @@ namespace DallarBot.Commands
 
             await LogHandlerService.LogUserActionAsync(Context, $"Invoked DAL command with amount {ParsedAmount}.");
 
-            if (!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+            if (true)//!Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
             {
                 await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: It appears that Dallar Bot is unable to evaluate the price of Dallar at the moment. Perhaps an exchange is down?");
                 return;
             }
 
-            float.TryParse(PriceInfo.PriceChange.TrimEnd('%'), out float PercentChange);
-            string ChangeEmoji = PercentChange >= 0.0f ? ":chart_with_upwards_trend:" : ":chart_with_downwards_trend:";
+            // float.TryParse(PriceInfo.PriceChange.TrimEnd('%'), out float PercentChange);
+            // string ChangeEmoji = PercentChange >= 0.0f ? ":chart_with_upwards_trend:" : ":chart_with_downwards_trend:";
 
-            decimal UsdValue = PriceInfo.USDValue.GetValueOrDefault();
+            // decimal UsdValue = PriceInfo.USDValue.GetValueOrDefault();
 
-            var Info = $"{ParsedAmount} DAL to BTC: {decimal.Round((PriceInfo.Price * ParsedAmount), 8, MidpointRounding.AwayFromZero):F8} BTC" + Environment.NewLine +
-                $"{ParsedAmount} DAL to USD: ${UsdValue * ParsedAmount} :dollar:" + Environment.NewLine +
-                $"24 Hour Stats: :arrow_down_small: {decimal.Round((PriceInfo.Low.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero)} sats / :arrow_up_small: {decimal.Round((PriceInfo.High.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero)} sats / :arrows_counterclockwise: {PriceInfo.VolumeMarket} BTC" + Environment.NewLine +
-                $"{ChangeEmoji} {PriceInfo.PriceChange} Change in 24 Hours";
+            // var Info = $"{ParsedAmount} DAL to BTC: {decimal.Round((PriceInfo.Price * ParsedAmount), 8, MidpointRounding.AwayFromZero):F8} BTC" + Environment.NewLine +
+            //     $"{ParsedAmount} DAL to USD: ${UsdValue * ParsedAmount} :dollar:" + Environment.NewLine +
+            //     $"24 Hour Stats: :arrow_down_small: {decimal.Round((PriceInfo.Low.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero)} sats / :arrow_up_small: {decimal.Round((PriceInfo.High.GetValueOrDefault() * 100000000.0m), 0, MidpointRounding.AwayFromZero)} sats / :arrows_counterclockwise: {PriceInfo.VolumeMarket} BTC" + Environment.NewLine +
+            //     $"{ChangeEmoji} {PriceInfo.PriceChange} Change in 24 Hours";
 
-            if (bPriceStale)
-            {
-                Info += "\n:warning: Info potentially out of date due to Exchange API lag.";
-            }
+            // if (bPriceStale)
+            // {
+            //     Info += "\n:warning: Info potentially out of date due to Exchange API lag.";
+            // }
 
-            await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: {Info}");
+            //await DiscordHelpers.PromptUserToDeleteMessage(Context, $"{Context.User.Mention}: {Info}");
         }
     }
 }

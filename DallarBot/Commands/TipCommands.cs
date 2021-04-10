@@ -22,10 +22,10 @@ namespace DallarBot.Commands
             await Context.TriggerTypingAsync();
 
             bool bDisplayUSD = false;
-            if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
-            {
-                bDisplayUSD = true;
-            }
+            // if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+            // {
+            //     bDisplayUSD = true;
+            // }
 
             if (Program.DaemonClient.GetWalletAddressFromAccount(Context.User.Id.ToString(), true, out string Wallet))
             {
@@ -36,7 +36,7 @@ namespace DallarBot.Commands
                 string resultStr = $"{Context.User.Mention}: Your balance is {balance} DAL";
                 if (bDisplayUSD)
                 {
-                    resultStr += $" (${decimal.Round(balance * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD){pendingBalanceStr}";
+                    //resultStr += $" (${decimal.Round(balance * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD){pendingBalanceStr}";
                 }
                 else
                 {
@@ -203,13 +203,13 @@ namespace DallarBot.Commands
 
             await LogHandlerService.LogUserActionAsync(Context, $"Invoked sending {Amount} to a random user with minimum status {MinimumStatus.ToString()}.");
 
-            IEnumerable<DiscordMember> Members = DiscordHelpers.GetHumansInContextGuild(Context, true, MinimumStatus);
+            var Members = DiscordHelpers.GetHumansInContextGuild(Context, true, MinimumStatus);
             int randomIndex = Program.RandomManager.GetRandomInteger(0, Members.Count() - 1);
 
-            DiscordMember Member = Members.ElementAt(randomIndex);
-            if (Member != null)
+            var Member = Members.ElementAt(randomIndex);
+            if (Member.Value != null)
             {
-                await SendDallarToUserInternal(Context, Amount.ToString(), Member, true);
+                await SendDallarToUserInternal(Context, Amount.ToString(), Member.Value, true);
             }
             else
             {   // failed to get random member?
@@ -289,17 +289,17 @@ namespace DallarBot.Commands
             if (Program.DaemonClient.SendMinusFees(Context.User.Id.ToString(), ToWallet, Amount, Program.SettingsHandler.Dallar.Txfee, Program.SettingsHandler.Dallar.FeeAccount))
             {
                 bool bDisplayUSD = false;
-                if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
-                {
-                    bDisplayUSD = true;
-                }
+                // if (Program.DigitalPriceExchange.GetPriceInfo(out DigitalPriceCurrencyInfo PriceInfo, out bool bPriceStale))
+                // {
+                //     bDisplayUSD = true;
+                // }
 
                 await LogHandlerService.LogUserActionAsync(Context, $"Sent {Amount} DAL ${(IsRandomSend ? "randomly " : "")}to User {Member.Id.ToString()} ({Member.Username.ToString()}) with address {ToWallet}.");
                 string ReplyStr = $"{Context.User.Mention}: You have successfully {(IsRandomSend ? "randomly " : "")}sent {Member.Mention} {Amount} DAL.";
 
                 if (bDisplayUSD)
                 {
-                    ReplyStr += $" {decimal.Round(Amount * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD)";
+                    //ReplyStr += $" {decimal.Round(Amount * PriceInfo.USDValue.GetValueOrDefault(), 4)} USD)";
                 }
 
                 await Context.RespondAsync(ReplyStr);

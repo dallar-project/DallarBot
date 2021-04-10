@@ -109,13 +109,13 @@ namespace DallarBot.Classes
             }
         }
 
-        public static bool HasMinimumStatus(DiscordPresence MemberPrescence, UserStatus MinimumStatus)
+        public static bool HasMinimumStatus(DiscordPresence MemberPresence, UserStatus MinimumStatus)
         {
             UserStatus MemberStatus = UserStatus.Offline;
 
-            if (MemberPrescence != null) // Apparently offline means null prescence instead of offline prescence
+            if (MemberPresence != null) // Apparently offline means null presence instead of offline presence
             {
-                MemberStatus = MemberPrescence.Status;
+                MemberStatus = MemberPresence.Status;
             }
 
             switch (MinimumStatus)
@@ -134,27 +134,29 @@ namespace DallarBot.Classes
             }
         }
 
-        public static IEnumerable<DiscordMember> GetHumansInContextGuild(CommandContext Context, bool IgnoreContextUser = false, UserStatus MinimumStatus = UserStatus.Offline)
+        public static IEnumerable<KeyValuePair<ulong, DiscordMember>> GetHumansInContextGuild(CommandContext Context, bool IgnoreContextUser = false, UserStatus MinimumStatus = UserStatus.Offline)
         {
-            return Context.Guild.Members.Where(x =>
-            {
-                if (x.IsBot)
+            var m = Context.Guild.Members;
+
+            return m.Where<KeyValuePair<ulong, DiscordMember>>(x => {
+
+                if (x.Value.IsBot)
                 {
                     return false;
                 }
 
-                if (IgnoreContextUser && Context.User.Id == x.Id)
+                if (IgnoreContextUser && Context.User.Id == x.Value.Id)
                 {
                     return false;
                 }
 
-                if (MinimumStatus != UserStatus.Offline && !HasMinimumStatus(x.Presence, MinimumStatus))
+                if (MinimumStatus != UserStatus.Offline && !HasMinimumStatus(x.Value.Presence, MinimumStatus))
                 {
                     return false;
                 }
 
-                return true;            
-            }); 
+                return true;
+            });
         }
 
         public static async Task<bool> PromptUserToConfirm(CommandContext Context, string PromptMessage, bool bDeleteOnComplete = true)
@@ -164,14 +166,16 @@ namespace DallarBot.Classes
             DiscordMessage Msg = await Context.RespondAsync(PromptMessage);
             await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":white_check_mark:"));
             await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":x:"));
-            ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "✅" || x.Name == "❌", Msg, Context.User);
+
+            var ReactContext = await Interactivity.WaitForReactionAsync(x => x.Emoji.Name == "✅" || x.Emoji.Name == "❌", Msg, Context.User);
+
 
             if (bDeleteOnComplete)
             {
                 await Msg.DeleteAsync();
             }
 
-            if (ReactContext != null && ReactContext.Emoji.Name == "✅")
+            if (ReactContext.Result != null && ReactContext.Result.Emoji.Name == "✅")
             {
                 return true;
             }
@@ -185,7 +189,7 @@ namespace DallarBot.Classes
             await Context.TriggerTypingAsync();
             DiscordMessage Msg = await Context.RespondAsync(Message);
             await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":wastebasket:"));
-            ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "wastebasket" || x.Name == x.Name, Msg, Context.User);
+            var ReactContext = await Interactivity.WaitForReactionAsync(x => x.Emoji.Name == "wastebasket", Msg, Context.User);
 
             if (Context.Member != null)
             {
@@ -204,7 +208,7 @@ namespace DallarBot.Classes
             await Context.TriggerTypingAsync();
             DiscordMessage Msg = await Context.RespondAsync(embed: Embed);
             await Msg.CreateReactionAsync(DiscordEmoji.FromName(Context.Client, ":wastebasket:"));
-            ReactionContext ReactContext = await Interactivity.WaitForMessageReactionAsync(x => x.Name == "wastebasket" || x.Name == x.Name, Msg, Context.User);
+            var ReactContext = await Interactivity.WaitForReactionAsync(x => x.Emoji.Name == "wastebasket", Msg, Context.User);
 
             if (Context.Member != null)
             {

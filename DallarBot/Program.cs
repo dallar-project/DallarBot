@@ -10,6 +10,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace DallarBot
 {
@@ -18,14 +19,14 @@ namespace DallarBot
         static DiscordShardedClient DiscordClient;
         public static SettingsHandlerService SettingsHandler;
         public static DaemonClient DaemonClient;
-        public static DigitalPriceExchangeService DigitalPriceExchange;
+        //public static DigitalPriceExchangeService DigitalPriceExchange;
         public static RandomManagerService RandomManager;
         public static YoMommaJokeService YoMommaJokes;
 
         static void Main(string[] args)
         {
             SettingsHandler = SettingsHandlerService.FromConfig();
-            DigitalPriceExchange = new DigitalPriceExchangeService();
+            //DigitalPriceExchange = new DigitalPriceExchangeService();
             RandomManager = new RandomManagerService();
             YoMommaJokes = new YoMommaJokeService();
 
@@ -37,7 +38,7 @@ namespace DallarBot
             // Ensure fee account is already created
             DaemonClient.GetWalletAddressFromAccount(SettingsHandler.Dallar.FeeAccount, true, out string toWallet);
 
-            MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
+            MainAsync(args).Wait();
         }
 
         static async Task MainAsync(string[] args)
@@ -50,18 +51,18 @@ namespace DallarBot
             Console.WriteLine(LogHandlerService.CenterString("----------------------------"));
             Console.WriteLine();
 
-            Console.WriteLine(LogHandlerService.CenterString("Initialising bot..."));
+            Console.WriteLine(LogHandlerService.CenterString("Initializing bot..."));
 
             DiscordClient = new DiscordShardedClient(new DiscordConfiguration
             {
                 Token = SettingsHandler.Discord.BotToken,
                 TokenType = TokenType.Bot,
-                LogLevel = LogLevel.Debug
+                MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
             });
 
-            DiscordClient.DebugLogger.LogMessageReceived += LogHandlerService.DiscordLogMessageReceived;
+            //DiscordClient.DebugLogger.LogMessageReceived += LogHandlerService.DiscordLogMessageReceived;
 
-            DiscordClient.MessageCreated += async e =>
+            DiscordClient.MessageCreated += async (s, e) =>
             {
                 if (e.Message.Content.ToLower().StartsWith("ping"))
                     await e.Message.RespondAsync("pong!");
@@ -75,15 +76,17 @@ namespace DallarBot
                 EnableDefaultHelp = false
             });
 
-            foreach (CommandsNextExtension CommandsModule in DiscordClient.GetCommandsNext().Values)
+            var Values = await DiscordClient.GetCommandsNextAsync();
+
+            foreach (System.Collections.Generic.KeyValuePair<int, CommandsNextExtension> CommandsModule in Values)
             {
-                CommandsModule.RegisterCommands<HelpCommands>();
-                CommandsModule.RegisterCommands<TipCommands>();
-                CommandsModule.RegisterCommands<MiscCommands>();
-                CommandsModule.RegisterCommands<ExchangeCommands>();
-                CommandsModule.RegisterCommands<DallarCommands>();
-                CommandsModule.SetHelpFormatter<HelpFormatter>();
-                CommandsModule.CommandErrored += async e =>
+                CommandsModule.Value.RegisterCommands<HelpCommands>();
+                CommandsModule.Value.RegisterCommands<TipCommands>();
+                CommandsModule.Value.RegisterCommands<MiscCommands>();
+                CommandsModule.Value.RegisterCommands<ExchangeCommands>();
+                CommandsModule.Value.RegisterCommands<DallarCommands>();
+                CommandsModule.Value.SetHelpFormatter<HelpFormatter>();
+                CommandsModule.Value.CommandErrored += async (s, e) =>
                 {
                     // first command failure on boot throws a null exception. Not sure why?
                     // Afterwards, this event logic always seems to work okay without error
@@ -105,7 +108,7 @@ namespace DallarBot
                         Channel = await e.Context.Member.CreateDmChannelAsync();
                     }
 
-                    await e.Context.Client.GetCommandsNext().SudoAsync(e.Context.User, Channel, "d!help " + e.Command.Name);
+                    //await e.Context.Client.GetCommandsNext().SudoAsync(e.Context.User, Channel, "d!help " + e.Command.Name);
                     DiscordHelpers.DeleteNonPrivateMessage(e.Context);
                 };
 
